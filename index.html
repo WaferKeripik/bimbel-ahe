@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Bimbel Ahe — Manajemen Operasional</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+<style>
+  /* ============================================================
+     BIMBEL AHE — Design System
+     Clean, distraction-free. Primary brand color + big tap targets.
+     ============================================================ */
+  :root{
+    --brand:#2563eb;          /* primary color (change here to rebrand) */
+    --brand-dark:#1d4ed8;
+    --brand-tint:#eff6ff;
+    --bg:#f4f6fb;
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --ok:#16a34a; --ok-tint:#dcfce7;
+    --warn:#d97706; --warn-tint:#fef3c7;
+    --wait:#64748b; --wait-tint:#f1f5f9;
+    --danger:#dc2626;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(15,23,42,.06),0 8px 24px rgba(15,23,42,.06);
+    --tap:52px;               /* minimum tap target height */
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);}
+  body{min-height:100vh;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;}
+  input,select,textarea{font-family:inherit;font-size:16px;}
+  .hidden{display:none !important;}
+
+  /* ---------- App shell ---------- */
+  .app{max-width:860px;margin:0 auto;padding:0 0 110px;min-height:100vh;}
+  .topbar{
+    position:sticky;top:0;z-index:40;background:var(--brand);color:#fff;
+    padding:14px 18px;display:flex;align-items:center;gap:12px;
+    box-shadow:0 2px 10px rgba(37,99,235,.25);
+  }
+  .logo{width:38px;height:38px;border-radius:11px;background:#fff;display:grid;place-items:center;font-size:22px;flex:0 0 auto;}
+  .topbar h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px;}
+  .topbar .sub{font-size:11px;opacity:.85;font-weight:500;}
+  .topbar .me{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12px;}
+  .topbar .me button{color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:9px;padding:7px 11px;font-size:12px;font-weight:600;}
+
+  /* ---------- Section / card ---------- */
+  .wrap{padding:18px;}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .section-title{display:flex;align-items:center;gap:8px;margin:4px 2px 12px;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+
+  /* ---------- Queue columns ---------- */
+  .queue-groups{display:flex;flex-direction:column;gap:18px;}
+  .group{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .group-head{padding:14px 16px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;border-bottom:1px solid var(--line);}
+  .group-head .count{margin-left:auto;background:var(--wait-tint);color:var(--muted);border-radius:999px;padding:3px 11px;font-size:12px;font-weight:700;}
+  .dot{width:10px;height:10px;border-radius:50%;}
+  .g-waiting .dot{background:var(--wait);}      .g-waiting .count{background:var(--wait-tint);color:var(--wait);}
+  .g-progress .dot{background:var(--warn);}     .g-progress .count{background:var(--warn-tint);color:var(--warn);}
+  .g-done .dot{background:var(--ok);}           .g-done .count{background:var(--ok-tint);color:var(--ok);}
+
+  .row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);min-height:var(--tap);transition:background .12s;}
+  .row:last-child{border-bottom:none;}
+  .row:active{background:var(--brand-tint);}
+  .avatar{width:40px;height:40px;border-radius:12px;background:var(--brand-tint);color:var(--brand);display:grid;place-items:center;font-weight:800;font-size:16px;flex:0 0 auto;}
+  .row .info{flex:1;min-width:0;}
+  .row .name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row .meta{font-size:12px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row .chev{color:var(--muted);font-size:20px;}
+  .empty{padding:26px 16px;text-align:center;color:var(--muted);font-size:13px;}
+
+  /* ---------- Buttons ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:var(--tap);
+       border-radius:14px;font-weight:700;font-size:15px;padding:0 20px;width:100%;transition:transform .05s,filter .12s;}
+  .btn:active{transform:scale(.985);}
+  .btn-primary{background:var(--brand);color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.3);}
+  .btn-primary:active{filter:brightness(.95);}
+  .btn-ghost{background:var(--brand-tint);color:var(--brand);}
+  .btn-ok{background:var(--ok);color:#fff;box-shadow:0 6px 16px rgba(22,163,74,.3);}
+  .btn-line{background:#fff;color:var(--ink);border:1.5px solid var(--line);}
+  .btn-danger-line{background:#fff;color:var(--danger);border:1.5px solid #fecaca;}
+
+  /* ---------- Bottom tab nav ---------- */
+  .tabbar{position:fixed;bottom:0;left:0;right:0;z-index:40;background:#fff;border-top:1px solid var(--line);
+          display:flex;max-width:860px;margin:0 auto;padding:6px 6px env(safe-area-inset-bottom);box-shadow:0 -4px 20px rgba(15,23,42,.05);}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;color:var(--muted);font-size:11px;font-weight:600;border-radius:12px;}
+  .tab .ic{font-size:21px;line-height:1;}
+  .tab.active{color:var(--brand);background:var(--brand-tint);}
+
+  /* ---------- FAB ---------- */
+  .fab{position:fixed;right:max(18px,calc(50% - 430px + 18px));bottom:84px;z-index:41;width:58px;height:58px;border-radius:50%;
+       background:var(--brand);color:#fff;font-size:30px;line-height:1;display:grid;place-items:center;
+       box-shadow:0 8px 22px rgba(37,99,235,.45);}
+  .fab:active{transform:scale(.94);}
+
+  /* ---------- Modal / sheet ---------- */
+  .overlay{position:fixed;inset:0;z-index:60;background:rgba(15,23,42,.45);display:flex;align-items:flex-end;justify-content:center;animation:fade .15s;}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .sheet{background:#fff;width:100%;max-width:860px;max-height:92vh;border-radius:22px 22px 0 0;overflow:auto;animation:slideup .22s cubic-bezier(.2,.8,.2,1);}
+  @keyframes slideup{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .sheet-head{position:sticky;top:0;background:#fff;padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;z-index:2;}
+  .sheet-head h2{font-size:17px;margin:0;font-weight:800;}
+  .sheet-head .x{margin-left:auto;width:38px;height:38px;border-radius:11px;background:var(--bg);display:grid;place-items:center;font-size:20px;color:var(--muted);}
+  .sheet-body{padding:18px;}
+  .sheet-foot{position:sticky;bottom:0;background:#fff;padding:14px 18px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--line);display:flex;gap:10px;}
+
+  /* ---------- Form fields ---------- */
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px;color:var(--ink);}
+  .field .req{color:var(--danger);}
+  .field .hint{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:5px;}
+  .control{width:100%;min-height:var(--tap);border:1.5px solid var(--line);border-radius:13px;padding:0 14px;background:#fff;color:var(--ink);outline:none;transition:border .12s,box-shadow .12s;}
+  textarea.control{padding:12px 14px;min-height:88px;resize:vertical;line-height:1.5;}
+  .control:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-tint);}
+  .control[readonly]{background:var(--bg);color:var(--muted);font-weight:700;}
+  select.control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;}
+  .calc-box{background:var(--brand-tint);border:1.5px dashed #bfdbfe;border-radius:13px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+  .calc-box .big{font-size:22px;font-weight:800;color:var(--brand);}
+  .calc-box .lbl{font-size:12px;color:var(--muted);font-weight:600;}
+
+  /* ---------- Form stepper ---------- */
+  .steps{display:flex;gap:8px;padding:14px 18px 2px;}
+  .step-pill{flex:1;text-align:center;font-size:12px;font-weight:700;color:var(--muted);padding:8px;border-radius:10px;background:var(--bg);}
+  .step-pill.active{background:var(--brand);color:#fff;}
+  .step-pill.done{background:var(--ok-tint);color:var(--ok);}
+
+  /* ---------- Detail view ---------- */
+  .detail-hero{padding:22px 18px;text-align:center;background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:#fff;}
+  .detail-hero .av{width:70px;height:70px;border-radius:20px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-size:30px;font-weight:800;margin:0 auto 12px;}
+  .detail-hero .nm{font-size:22px;font-weight:800;}
+  .detail-hero .st{display:inline-block;margin-top:9px;background:rgba(255,255,255,.22);padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:700;}
+  .kv{display:flex;padding:14px 18px;border-bottom:1px solid var(--line);gap:14px;}
+  .kv:last-child{border-bottom:none;}
+  .kv .k{width:150px;flex:0 0 auto;color:var(--muted);font-size:13px;font-weight:600;}
+  .kv .v{flex:1;font-size:14px;font-weight:600;word-break:break-word;}
+  .badge{display:inline-block;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;}
+  .b-ok{background:var(--ok-tint);color:var(--ok);} .b-warn{background:var(--warn-tint);color:var(--warn);} .b-wait{background:var(--wait-tint);color:var(--wait);}
+
+  /* ---------- Stat cards ---------- */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+  .stat{background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:14px;text-align:center;}
+  .stat .n{font-size:26px;font-weight:800;color:var(--brand);}
+  .stat .l{font-size:11px;color:var(--muted);font-weight:600;margin-top:3px;}
+
+  /* quota bar */
+  .quota-wrap{height:8px;background:var(--line);border-radius:999px;overflow:hidden;margin-top:8px;}
+  .quota-bar{height:100%;background:var(--brand);border-radius:999px;transition:width .3s;}
+  .quota-bar.low{background:var(--danger);}
+
+  /* ---------- Login ---------- */
+  .login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;
+         background:linear-gradient(150deg,var(--brand) 0%,var(--brand-dark) 55%,#0f172a 140%);}
+  .login .brand{width:92px;height:92px;border-radius:26px;background:#fff;display:grid;place-items:center;font-size:48px;box-shadow:0 12px 40px rgba(0,0,0,.25);margin-bottom:22px;}
+  .login h1{color:#fff;font-size:26px;margin:0 0 4px;font-weight:800;}
+  .login p{color:rgba(255,255,255,.85);margin:0 0 30px;font-size:14px;}
+  .login-card{background:#fff;border-radius:20px;padding:22px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .login-card h3{margin:0 0 4px;font-size:16px;}
+  .login-card .sub{margin:0 0 18px;font-size:12.5px;color:var(--muted);}
+  .err{background:#fef2f2;border:1px solid #fecaca;color:var(--danger);border-radius:11px;padding:10px 12px;font-size:12.5px;font-weight:600;margin-bottom:14px;}
+  .login .foot{color:rgba(255,255,255,.7);font-size:11px;margin-top:22px;text-align:center;max-width:380px;}
+
+  .toast{position:fixed;left:50%;bottom:150px;transform:translateX(-50%);z-index:90;background:var(--ink);color:#fff;
+         padding:12px 20px;border-radius:999px;font-size:13.5px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);
+         animation:pop .2s;max-width:90%;}
+  @keyframes pop{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+
+  @media(min-width:861px){ .fab{right:calc(50% - 430px + 18px);} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+/* ============================================================================
+   BIMBEL AHE — Operational Management App  (vanilla JS, zero dependencies)
+   Mirrors the AppSheet blueprint:
+     Tables:   Data Murid, Data Guru, Log Sesi/Antrian
+     Security: email-whitelist "teacher login" (stand-in for Google SSO)
+     Queue:    grouped Waiting -> In Progress -> Done, oldest on top
+     Action:   "Claim Murid" (prominent) -> Status = In Progress
+     Formulas: Sisa Kuota Sesi, Total Page, Durasi Belajar (auto)
+   Data persists in localStorage so nothing is lost on refresh.
+   ============================================================================ */
+"use strict";
+
+/* ---------------------------------------------------------------------------
+   0. CONFIG — change branding + whitelist here
+   --------------------------------------------------------------------------- */
+const CONFIG = {
+  appName: "Bimbel Ahe",
+  tagline: "Manajemen Operasional Bimbel",
+  logo: "📚",
+  // ACCESS CONTROL — whitelist of teacher emails (stand-in for Google SSO share list)
+  whitelist: [
+    "admin@bimbelahe.com",
+    "guru1@bimbelahe.com",
+    "guru2@bimbelahe.com",
+  ],
+  levels: ["TK","SD Kelas 1","SD Kelas 2","SD Kelas 3","SD Kelas 4","SD Kelas 5","SD Kelas 6","SMP","SMA"],
+  sppStatus: ["Lunas","Belum Lunas","Jatuh Tempo"],
+  queueStatus: ["Waiting","In Progress","Done"],
+};
+
+/* ---------------------------------------------------------------------------
+   1. STORAGE LAYER — the "Google Sheets". Three tables.
+   --------------------------------------------------------------------------- */
+const DB = {
+  k:{ murid:"ba_murid", guru:"ba_guru", log:"ba_log", session:"ba_session" },
+  read(key){ try{ return JSON.parse(localStorage.getItem(key)) || []; }catch(e){ return []; } },
+  write(key,val){ localStorage.setItem(key, JSON.stringify(val)); },
+  uid(p){ return p + "_" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); },
+
+  murids(){ return DB.read(DB.k.murid); },
+  gurus(){ return DB.read(DB.k.guru); },
+  logs(){ return DB.read(DB.k.log); },
+
+  saveMurids(v){ DB.write(DB.k.murid,v); },
+  saveGurus(v){ DB.write(DB.k.guru,v); },
+  saveLogs(v){ DB.write(DB.k.log,v); },
+
+  /* ---- Seed demo data on first run so the app isn't empty ---- */
+  seed(){
+    if(DB.read(DB.k.guru).length===0){
+      DB.saveGurus([
+        { id:DB.uid("GRU"), nama:"Bu Sari" },
+        { id:DB.uid("GRU"), nama:"Pak Budi" },
+        { id:DB.uid("GRU"), nama:"Bu Ratna" },
+      ]);
+    }
+    if(DB.read(DB.k.murid).length===0){
+      const now=Date.now();
+      DB.saveMurids([
+        { id:DB.uid("MRD"), nama:"Andi Pratama", hp:"081234567801", level:"SD Kelas 4", waktuMasuk:new Date(now-86400000*3).toISOString(), spp:"Lunas", kuotaAwal:12 },
+        { id:DB.uid("MRD"), nama:"Bunga Lestari", hp:"081234567802", level:"SMP", waktuMasuk:new Date(now-86400000*8).toISOString(), spp:"Belum Lunas", kuotaAwal:8 },
+        { id:DB.uid("MRD"), nama:"Citra Dewi", hp:"081234567803", level:"SD Kelas 2", waktuMasuk:new Date(now-86400000).toISOString(), spp:"Lunas", kuotaAwal:16 },
+      ]);
+    }
+    if(DB.read(DB.k.log).length===0){
+      const m=DB.murids(), g=DB.gurus(), now=Date.now();
+      DB.saveLogs([
+        { id:DB.uid("LOG"), muridId:m[0].id, guruId:"", waktuMasuk:new Date(now-1800000).toISOString(),
+          status:"Waiting", waktuSelesai:"", durasi:"", level:"", pageAwal:null, pageAkhir:null, catatan:"", foto:"" },
+        { id:DB.uid("LOG"), muridId:m[1].id, guruId:"", waktuMasuk:new Date(now-3600000).toISOString(),
+          status:"Waiting", waktuSelesai:"", durasi:"", level:"", pageAwal:null, pageAkhir:null, catatan:"", foto:"" },
+        { id:DB.uid("LOG"), muridId:m[2].id, guruId:g[0].id, waktuMasuk:new Date(now-5400000).toISOString(),
+          status:"In Progress", waktuSelesai:"", durasi:"", level:"Matematika", pageAwal:null, pageAkhir:null, catatan:"", foto:"" },
+      ]);
+    }
+  }
+};
+
+/* ---------------------------------------------------------------------------
+   2. DERIVED / FORMULA HELPERS (the "App Formulas")
+   --------------------------------------------------------------------------- */
+const F = {
+  // Sisa Kuota Sesi = Kuota Awal - COUNT(logs where muridId == this murid)
+  sisaKuota(muridId){
+    const m = DB.murids().find(x=>x.id===muridId);
+    if(!m) return 0;
+    const used = DB.logs().filter(l=>l.muridId===muridId).length;
+    return (Number(m.kuotaAwal)||0) - used;
+  },
+  sesiTerpakai(muridId){ return DB.logs().filter(l=>l.muridId===muridId).length; },
+  muridName(id){ const m=DB.murids().find(x=>x.id===id); return m?m.nama:"—"; },
+  guruName(id){ const g=DB.gurus().find(x=>x.id===id); return g?g.nama:""; },
+  totalPage(awal,akhir){
+    if(awal==null||awal===""||akhir==null||akhir==="") return null;
+    const a=Number(awal), b=Number(akhir);
+    if(isNaN(a)||isNaN(b)) return null;
+    return Math.max(0, b-a);
+  },
+  // Durasi from DateTime "waktu masuk" to a "waktu selesai" time string (today)
+  durasiText(waktuMasukISO, waktuSelesaiHHMM){
+    if(!waktuMasukISO||!waktuSelesaiHHMM) return "";
+    const start=new Date(waktuMasukISO);
+    const [h,mi]=waktuSelesaiHHMM.split(":").map(Number);
+    const end=new Date(start); end.setHours(h,mi,0,0);
+    let diff=(end-start)/60000; if(diff<0) diff+=1440; // crossed midnight
+    const H=Math.floor(diff/60), M=Math.round(diff%60);
+    return (H>0?H+" jam ":"") + M + " menit";
+  },
+  initials(name){ return (name||"?").trim().split(/\s+/).slice(0,2).map(s=>s[0]).join("").toUpperCase(); },
+  fmtDate(iso){ if(!iso) return "—"; const d=new Date(iso);
+    return d.toLocaleString("id-ID",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}); },
+  fmtDateShort(iso){ if(!iso) return "—"; return new Date(iso).toLocaleDateString("id-ID",{day:"2-digit",month:"short",year:"numeric"}); },
+  ago(iso){ if(!iso) return ""; const m=Math.floor((Date.now()-new Date(iso))/60000);
+    if(m<1) return "baru saja"; if(m<60) return m+" mnt lalu";
+    const h=Math.floor(m/60); if(h<24) return h+" jam lalu"; return Math.floor(h/24)+" hari lalu"; },
+};
+
+/* ---------------------------------------------------------------------------
+   3. SESSION (login state)
+   --------------------------------------------------------------------------- */
+const Session = {
+  get(){ try{ return JSON.parse(localStorage.getItem(DB.k.session)); }catch(e){ return null; } },
+  set(email){ localStorage.setItem(DB.k.session, JSON.stringify({ email, at:Date.now() })); },
+  clear(){ localStorage.removeItem(DB.k.session); },
+};
+
+/* ---------------------------------------------------------------------------
+   4. TINY DOM HELPERS
+   --------------------------------------------------------------------------- */
+function h(tag, attrs, ...kids){
+  const el=document.createElement(tag);
+  if(attrs) for(const k in attrs){
+    if(k==="class") el.className=attrs[k];
+    else if(k==="html") el.innerHTML=attrs[k];
+    else if(k.startsWith("on")&&typeof attrs[k]==="function") el.addEventListener(k.slice(2).toLowerCase(),attrs[k]);
+    else if(attrs[k]!=null&&attrs[k]!==false) el.setAttribute(k,attrs[k]);
+  }
+  for(const kid of kids.flat()){ if(kid==null||kid===false) continue;
+    el.appendChild(typeof kid==="string"||typeof kid==="number"?document.createTextNode(kid):kid); }
+  return el;
+}
+const $root=()=>document.getElementById("root");
+function toast(msg){ const t=h("div",{class:"toast"},msg); document.body.appendChild(t);
+  setTimeout(()=>t.style.opacity="0",1600); setTimeout(()=>t.remove(),1950); }
+
+/* ---------------------------------------------------------------------------
+   5. APP STATE + ROUTER
+   --------------------------------------------------------------------------- */
+const App = {
+  tab:"queue",        // queue | murid | guru
+  overlay:null,       // function returning overlay element, or null
+  mount(){
+    DB.seed();
+    App.render();
+  },
+  go(tab){ App.tab=tab; App.closeOverlay(); App.render(); },
+  openOverlay(fn){ App.overlay=fn; App.render(); },
+  closeOverlay(){ App.overlay=null; App.render(); },
+  render(){
+    const root=$root(); root.innerHTML="";
+    if(!Session.get()){ root.appendChild(LoginView()); return; }
+    root.appendChild(Shell());
+    if(App.overlay) document.body.appendChild(App.overlay());
+  }
+};
+
+/* ---------------------------------------------------------------------------
+   6. LOGIN VIEW (Google-SSO stand-in with email whitelist)
+   --------------------------------------------------------------------------- */
+function LoginView(){
+  let errMsg="";
+  const emailInput=h("input",{class:"control",type:"email",placeholder:"nama@bimbelahe.com",autocomplete:"email"});
+  const errBox=h("div",{class:"err hidden"});
+  function showErr(m){ errMsg=m; errBox.textContent=m; errBox.classList.toggle("hidden",!m); }
+  function attempt(){
+    const email=(emailInput.value||"").trim().toLowerCase();
+    if(!email){ showErr("Masukkan email Anda."); return; }
+    if(!CONFIG.whitelist.map(e=>e.toLowerCase()).includes(email)){
+      showErr("⛔ Akses ditolak. Email ini tidak terdaftar sebagai guru."); return;
+    }
+    Session.set(email); App.tab="queue"; App.render();
+  }
+  return h("div",{class:"login"},
+    h("div",{class:"brand"}, CONFIG.logo),
+    h("h1",{}, CONFIG.appName),
+    h("p",{}, CONFIG.tagline),
+    h("div",{class:"login-card"},
+      h("h3",{}, "Masuk sebagai Guru"),
+      h("p",{class:"sub"}, "Hanya email guru terdaftar yang dapat mengakses aplikasi."),
+      errBox,
+      h("div",{class:"field"},
+        h("label",{}, "Email Guru"),
+        emailInput,
+        h("div",{class:"hint"}, "Coba demo: admin@bimbelahe.com")
+      ),
+      h("button",{class:"btn btn-primary",onClick:attempt}, "🔐  Masuk")
+    ),
+    h("div",{class:"foot"}, "Kontrol akks via daftar email (pengganti Google SSO). Tambahkan email guru di CONFIG.whitelist.")
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   7. SHELL (topbar + body + tabbar + FAB)
+   --------------------------------------------------------------------------- */
+function Shell(){
+  const me=Session.get();
+  const topbar=h("div",{class:"topbar"},
+    h("div",{class:"logo"}, CONFIG.logo),
+    h("div",{},
+      h("h1",{}, CONFIG.appName),
+      h("div",{class:"sub"}, CONFIG.tagline)
+    ),
+    h("div",{class:"me"},
+      h("span",{}, me.email.split("@")[0]),
+      h("button",{onClick:()=>{ if(confirm("Keluar dari aplikasi?")){ Session.clear(); App.render(); } }}, "Keluar")
+    )
+  );
+
+  let body;
+  if(App.tab==="queue") body=QueueView();
+  else if(App.tab==="murid") body=MuridListView();
+  else body=GuruListView();
+
+  const tabbar=h("div",{class:"tabbar"},
+    tabBtn("queue","📋","Antrian"),
+    tabBtn("murid","🎓","Murid"),
+    tabBtn("guru","👩‍🏫","Guru"),
+  );
+
+  // FAB context-sensitive to the active tab
+  let fab=null;
+  if(App.tab==="queue") fab=h("button",{class:"fab",title:"Tambah ke Antrian",onClick:()=>App.openOverlay(AddToQueueSheet)}, "+");
+  if(App.tab==="murid") fab=h("button",{class:"fab",title:"Murid Baru",onClick:()=>App.openOverlay(()=>MuridFormSheet(null))}, "+");
+  if(App.tab==="guru")  fab=h("button",{class:"fab",title:"Guru Baru",onClick:()=>App.openOverlay(()=>GuruFormSheet(null))}, "+");
+
+  return h("div",{class:"app"}, topbar, body, fab, tabbar);
+}
+function tabBtn(id,ic,label){
+  return h("button",{class:"tab"+(App.tab===id?" active":""),onClick:()=>App.go(id)},
+    h("div",{class:"ic"}, ic), h("div",{}, label));
+}
+
+/* ---------------------------------------------------------------------------
+   8. QUEUE VIEW — grouped Waiting -> In Progress -> Done, oldest on top
+   --------------------------------------------------------------------------- */
+function QueueView(){
+  const logs=DB.logs();
+  // Sort oldest-first by Waktu Masuk
+  const sorted=[...logs].sort((a,b)=>new Date(a.waktuMasuk)-new Date(b.waktuMasuk));
+
+  const counts={ "Waiting":0,"In Progress":0,"Done":0 };
+  logs.forEach(l=>{ if(counts[l.status]!=null) counts[l.status]++; });
+
+  const stats=h("div",{class:"stats"},
+    statCard(counts["Waiting"],"Menunggu"),
+    statCard(counts["In Progress"],"Berlangsung"),
+    statCard(counts["Done"],"Selesai"),
+  );
+
+  const groups=h("div",{class:"queue-groups"});
+  // Order Waiting -> In Progress -> Done (your "descending alphabetical" intent)
+  [["Waiting","g-waiting","Menunggu"],["In Progress","g-progress","Sedang Berlangsung"],["Done","g-done","Selesai"]]
+  .forEach(([status,cls,label])=>{
+    const items=sorted.filter(l=>l.status===status);
+    const grp=h("div",{class:"group "+cls},
+      h("div",{class:"group-head"},
+        h("span",{class:"dot"}), h("span",{}, label),
+        h("span",{class:"count"}, String(items.length))
+      )
+    );
+    if(items.length===0){ grp.appendChild(h("div",{class:"empty"}, "Tidak ada antrian.")); }
+    else items.forEach(l=>grp.appendChild(queueRow(l)));
+    groups.appendChild(grp);
+  });
+
+  return h("div",{class:"wrap"}, stats,
+    h("div",{class:"section-title"}, "📋 Dashboard Antrian"),
+    groups
+  );
+}
+function statCard(n,l){ return h("div",{class:"stat"}, h("div",{class:"n"}, String(n)), h("div",{class:"l"}, l)); }
+
+function queueRow(log){
+  const name=F.muridName(log.muridId);
+  const guru=F.guruName(log.guruId);
+  const metaBits=[F.ago(log.waktuMasuk)];
+  if(guru) metaBits.push("👩‍🏫 "+guru);
+  return h("div",{class:"row",onClick:()=>App.openOverlay(()=>LogDetailSheet(log.id))},
+    h("div",{class:"avatar"}, F.initials(name)),
+    h("div",{class:"info"},
+      h("div",{class:"name"}, name),
+      h("div",{class:"meta"}, metaBits.join("  ·  "))
+    ),
+    h("div",{class:"chev"}, "›")
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   9. LOG DETAIL SHEET  — with the prominent "Claim Murid" action
+   --------------------------------------------------------------------------- */
+function LogDetailSheet(logId){
+  const log=DB.logs().find(l=>l.id===logId);
+  if(!log) return h("div");
+  const m=DB.murids().find(x=>x.id===log.muridId);
+  const name=m?m.nama:"—";
+  const sisa=F.sisaKuota(log.muridId);
+  const badgeCls=log.status==="Done"?"b-ok":log.status==="In Progress"?"b-warn":"b-wait";
+  const statusLabel={ "Waiting":"Menunggu","In Progress":"Sedang Berlangsung","Done":"Selesai" }[log.status];
+
+  const body=h("div",{},
+    h("div",{class:"detail-hero"},
+      h("div",{class:"av"}, F.initials(name)),
+      h("div",{class:"nm"}, name),
+      h("div",{class:"st"}, statusLabel)
+    ),
+    kv("Level Saat Ini", m?m.level:"—"),
+    kv("Nomor HP", m?m.hp:"—"),
+    kv("Status SPP", badge(m?m.spp:"—", m&&m.spp==="Lunas"?"b-ok":"b-warn")),
+    kv("Sisa Kuota Sesi", String(sisa)+" sesi"),
+    kv("Waktu Masuk Antrian", F.fmtDate(log.waktuMasuk)),
+    log.guruId? kv("Guru", F.guruName(log.guruId)) : null,
+    log.level? kv("Level Materi", log.level):null,
+    (log.pageAwal!=null&&log.pageAkhir!=null)? kv("Halaman", log.pageAwal+" → "+log.pageAkhir+" ("+F.totalPage(log.pageAwal,log.pageAkhir)+" hal)"):null,
+    log.durasi? kv("Durasi Belajar", log.durasi):null,
+    log.waktuSelesai? kv("Waktu Selesai", log.waktuSelesai):null,
+    log.catatan? kv("Catatan", log.catatan):null,
+  );
+
+  // Footer actions depend on current status (the microflow)
+  const foot=h("div",{class:"sheet-foot"});
+  if(log.status==="Waiting"){
+    // === CLAIM MURID — prominent primary action ===
+    foot.appendChild(h("button",{class:"btn btn-primary",onClick:()=>claimMurid(log.id)}, "🙋  Klaim Murid (Mulai Sesi)"));
+  } else if(log.status==="In Progress"){
+    foot.appendChild(h("button",{class:"btn btn-line",style:"flex:0 0 auto;width:auto;padding:0 16px",onClick:()=>releaseMurid(log.id)}, "↩︎"));
+    foot.appendChild(h("button",{class:"btn btn-ok",onClick:()=>App.openOverlay(()=>LogFormSheet(log.id))}, "✅  Selesaikan & Catat Progres"));
+  } else {
+    foot.appendChild(h("button",{class:"btn btn-line",onClick:()=>App.openOverlay(()=>LogFormSheet(log.id))}, "✏️  Edit Catatan"));
+  }
+
+  return Sheet("Detail Antrian", body, foot);
+}
+function kv(k,v){ return h("div",{class:"kv"}, h("div",{class:"k"}, k),
+  h("div",{class:"v"}, typeof v==="string"||typeof v==="number"?String(v):v)); }
+function badge(text,cls){ return h("span",{class:"badge "+cls}, text); }
+
+/* ---- Microflow actions ---- */
+function claimMurid(logId){
+  const logs=DB.logs(); const log=logs.find(l=>l.id===logId);
+  const me=Session.get();
+  // The teacher who claims is auto-assigned if their email maps to a guru name; else leave for form.
+  log.status="In Progress";
+  DB.saveLogs(logs);
+  toast("✅ Murid diklaim — sesi dimulai");
+  App.openOverlay(()=>LogFormSheet(logId)); // jump straight into recording (keeps it <3 clicks)
+}
+function releaseMurid(logId){
+  const logs=DB.logs(); const log=logs.find(l=>l.id===logId);
+  log.status="Waiting"; log.guruId="";
+  DB.saveLogs(logs);
+  toast("↩︎ Dikembalikan ke antrian");
+  App.closeOverlay();
+}
+
+/* ---------------------------------------------------------------------------
+   10. LOG FORM — 2-PAGE STEPPER (Session details -> Learning progress)
+   --------------------------------------------------------------------------- */
+function LogFormSheet(logId){
+  const logs=DB.logs();
+  const log=logs.find(l=>l.id===logId);
+  const m=DB.murids().find(x=>x.id===log.muridId);
+  const state={ page:1,
+    guruId:log.guruId||"", waktuSelesai:log.waktuSelesai|| new Date().toTimeString().slice(0,5),
+    level:log.level||(m?m.level:""), pageAwal:log.pageAwal, pageAkhir:log.pageAkhir,
+    catatan:log.catatan||"", foto:log.foto||"" };
+
+  const container=h("div",{});
+  function rebuild(){ container.innerHTML=""; container.appendChild(buildPage()); }
+
+  function buildPage(){
+    const stepPills=h("div",{class:"steps"},
+      h("div",{class:"step-pill "+(state.page===1?"active":"done")}, "1 · Sesi"),
+      h("div",{class:"step-pill "+(state.page===2?"active":"")}, "2 · Progres")
+    );
+
+    let fields, foot;
+    if(state.page===1){
+      // ---------- PAGE 1 : Session ----------
+      const guruSel=selectField("Nama Guru", CONFIG.guruOptions || DB.gurus().map(g=>({v:g.id,t:g.nama})), state.guruId, v=>state.guruId=v, true);
+      const selesai=timeField("Waktu Selesai", state.waktuSelesai, v=>{ state.waktuSelesai=v; durasiBox.querySelector(".big").textContent=F.durasiText(log.waktuMasuk,v)||"—"; });
+      const durasiBox=calcBox("Durasi Belajar (otomatis)", F.durasiText(log.waktuMasuk,state.waktuSelesai)||"—");
+      fields=h("div",{class:"sheet-body"},
+        h("div",{class:"field"}, h("label",{}, "Nama Murid"),
+          h("input",{class:"control",readonly:true,value:(m?m.nama:"—")})),
+        guruSel, selesai,
+        h("div",{class:"field"}, durasiBox)
+      );
+      foot=h("div",{class:"sheet-foot"},
+        h("button",{class:"btn btn-primary",onClick:()=>{
+          if(!state.guruId){ toast("Pilih nama guru dulu"); return; }
+          state.page=2; rebuild();
+        }}, "Lanjut ke Progres  →")
+      );
+    } else {
+      // ---------- PAGE 2 : Learning progress ----------
+      const totalBox=calcBox("Total Halaman (otomatis)", pageTotalText());
+      function pageTotalText(){ const t=F.totalPage(state.pageAwal,state.pageAkhir); return t==null?"—":t+" halaman"; }
+      const pAwal=numField("Page Awal", state.pageAwal, v=>{ state.pageAwal=v; totalBox.querySelector(".big").textContent=pageTotalText(); });
+      const pAkhir=numField("Page Akhir", state.pageAkhir, v=>{ state.pageAkhir=v; totalBox.querySelector(".big").textContent=pageTotalText(); });
+      fields=h("div",{class:"sheet-body"},
+        selectField("Level Materi", CONFIG.levels.map(l=>({v:l,t:l})), state.level, v=>state.level=v, false),
+        h("div",{style:"display:flex;gap:12px"}, h("div",{style:"flex:1"},pAwal), h("div",{style:"flex:1"},pAkhir)),
+        h("div",{class:"field"}, totalBox),
+        textareaField("Catatan Tambahan", state.catatan, v=>state.catatan=v),
+        imageField("Foto Bukti", state.foto, v=>{ state.foto=v; rebuild(); })
+      );
+      foot=h("div",{class:"sheet-foot"},
+        h("button",{class:"btn btn-line",style:"flex:0 0 auto;width:auto;padding:0 18px",onClick:()=>{ state.page=1; rebuild(); }}, "←"),
+        h("button",{class:"btn btn-ok",onClick:saveLog}, "✅  Simpan & Selesai")
+      );
+    }
+    return h("div",{}, stepPills, fields, foot);
+  }
+
+  function saveLog(){
+    log.guruId=state.guruId;
+    log.waktuSelesai=state.waktuSelesai;
+    log.durasi=F.durasiText(log.waktuMasuk,state.waktuSelesai);
+    log.level=state.level;
+    log.pageAwal=state.pageAwal; log.pageAkhir=state.pageAkhir;
+    log.catatan=state.catatan; log.foto=state.foto;
+    log.status="Done";
+    DB.saveLogs(logs);
+    // Keep the student's "current level" in sync if materi level advanced
+    if(m && state.level){ const ms=DB.murids(); const mm=ms.find(x=>x.id===m.id); if(mm){ mm.level=state.level; DB.saveMurids(ms); } }
+    toast("✅ Progres tersimpan");
+    App.closeOverlay();
+  }
+
+  rebuild();
+  return SheetRaw("Catat Sesi Belajar", container);
+}
+
+/* ---------------------------------------------------------------------------
+   11. ADD TO QUEUE (pick an existing murid -> create Waiting log)
+   --------------------------------------------------------------------------- */
+function AddToQueueSheet(){
+  const murids=DB.murids();
+  const body=h("div",{class:"sheet-body"});
+  if(murids.length===0){
+    body.appendChild(h("div",{class:"empty"}, "Belum ada murid. Tambahkan murid dulu di tab Murid."));
+  } else {
+    body.appendChild(h("div",{class:"section-title"}, "Pilih murid untuk masuk antrian"));
+    murids.forEach(m=>{
+      const sisa=F.sisaKuota(m.id);
+      body.appendChild(h("div",{class:"row",style:"border:1px solid var(--line);border-radius:12px;margin-bottom:10px;",
+        onClick:()=>{
+          const logs=DB.logs();
+          logs.push({ id:DB.uid("LOG"), muridId:m.id, guruId:"", waktuMasuk:new Date().toISOString(),
+            status:"Waiting", waktuSelesai:"", durasi:"", level:"", pageAwal:null, pageAkhir:null, catatan:"", foto:"" });
+          DB.saveLogs(logs); toast("➕ Masuk antrian: "+m.nama); App.closeOverlay();
+        }},
+        h("div",{class:"avatar"}, F.initials(m.nama)),
+        h("div",{class:"info"}, h("div",{class:"name"}, m.nama),
+          h("div",{class:"meta"}, m.level+"  ·  Sisa "+sisa+" sesi")),
+        h("div",{class:"chev"}, "+")
+      ));
+    });
+  }
+  return Sheet("Tambah ke Antrian", body, null);
+}
+
+/* ---------------------------------------------------------------------------
+   12. MURID LIST + FORM
+   --------------------------------------------------------------------------- */
+function MuridListView(){
+  const murids=DB.murids();
+  const list=h("div",{class:"card"});
+  if(murids.length===0) list.appendChild(h("div",{class:"empty"}, "Belum ada murid. Tekan + untuk menambah."));
+  murids.forEach(m=>{
+    const sisa=F.sisaKuota(m.id); const used=F.sesiTerpakai(m.id);
+    const pct=m.kuotaAwal>0?Math.max(0,Math.min(100,(sisa/m.kuotaAwal)*100)):0;
+    list.appendChild(h("div",{class:"row",onClick:()=>App.openOverlay(()=>MuridDetailSheet(m.id))},
+      h("div",{class:"avatar"}, F.initials(m.nama)),
+      h("div",{class:"info"},
+        h("div",{class:"name"}, m.nama),
+        h("div",{class:"meta"}, m.level+"  ·  Sisa "+sisa+"/"+m.kuotaAwal+" sesi"),
+        h("div",{class:"quota-wrap"}, h("div",{class:"quota-bar"+(sisa<=2?" low":""),style:"width:"+pct+"%"}))
+      ),
+      h("div",{class:"chev"}, "›")
+    ));
+  });
+  return h("div",{class:"wrap"}, h("div",{class:"section-title"}, "🎓 Data Murid"), list);
+}
+
+function MuridDetailSheet(id){
+  const m=DB.murids().find(x=>x.id===id);
+  const sisa=F.sisaKuota(id), used=F.sesiTerpakai(id);
+  const body=h("div",{},
+    h("div",{class:"detail-hero"},
+      h("div",{class:"av"}, F.initials(m.nama)),
+      h("div",{class:"nm"}, m.nama),
+      h("div",{class:"st"}, m.level)
+    ),
+    kv("Nomor HP", m.hp||"—"),
+    kv("Status SPP", badge(m.spp, m.spp==="Lunas"?"b-ok":"b-warn")),
+    kv("Waktu Masuk", F.fmtDateShort(m.waktuMasuk)),
+    kv("Kuota Awal", m.kuotaAwal+" sesi"),
+    kv("Sesi Terpakai", used+" sesi"),
+    kv("Sisa Kuota Sesi", h("b",{style:"color:var(--brand);font-size:16px"}, sisa+" sesi")),
+  );
+  const foot=h("div",{class:"sheet-foot"},
+    h("button",{class:"btn btn-danger-line",style:"flex:0 0 auto;width:auto;padding:0 16px",onClick:()=>{
+      if(confirm("Hapus murid "+m.nama+"?")){ DB.saveMurids(DB.murids().filter(x=>x.id!==id)); toast("🗑️ Dihapus"); App.closeOverlay(); App.render(); }
+    }}, "🗑️"),
+    h("button",{class:"btn btn-ghost",onClick:()=>App.openOverlay(()=>MuridFormSheet(id))}, "✏️  Edit"),
+    h("button",{class:"btn btn-primary",onClick:()=>{
+      const logs=DB.logs();
+      logs.push({ id:DB.uid("LOG"), muridId:id, guruId:"", waktuMasuk:new Date().toISOString(),
+        status:"Waiting", waktuSelesai:"", durasi:"", level:"", pageAwal:null, pageAkhir:null, catatan:"", foto:"" });
+      DB.saveLogs(logs); toast("➕ Masuk antrian"); App.closeOverlay(); App.go("queue");
+    }}, "➕ Antrian")
+  );
+  return Sheet("Detail Murid", body, foot);
+}
+
+// New-student form shows ONLY static identity fields (per blueprint).
+function MuridFormSheet(id){
+  const editing=!!id;
+  const m=editing?DB.murids().find(x=>x.id===id):null;
+  const s={ nama:m?m.nama:"", hp:m?m.hp:"", level:m?m.level:CONFIG.levels[1],
+            spp:m?m.spp:"Lunas", kuotaAwal:m?m.kuotaAwal:12 };
+  const body=h("div",{class:"sheet-body"},
+    textField("Nama Murid", s.nama, v=>s.nama=v, true),
+    textField("Nomor HP", s.hp, v=>s.hp=v, false, "tel"),
+    // Dynamic fields are shown only when editing (hidden on the NEW registration form)
+    !editing? h("div",{class:"calc-box",style:"margin-bottom:16px"},
+        h("div",{}, h("div",{class:"lbl"}, "Field dinamis (Sisa Kuota, Level, SPP) diperbarui otomatis saat sesi berjalan — disembunyikan dari form pendaftaran."))) : null,
+    numField("Kuota Awal (sesi)", s.kuotaAwal, v=>s.kuotaAwal=v, true),
+    editing? selectField("Level Saat Ini", CONFIG.levels.map(l=>({v:l,t:l})), s.level, v=>s.level=v, false):null,
+    editing? selectField("Status SPP", CONFIG.sppStatus.map(x=>({v:x,t:x})), s.spp, v=>s.spp=v, false):null,
+  );
+  const foot=h("div",{class:"sheet-foot"},
+    h("button",{class:"btn btn-primary",onClick:()=>{
+      if(!s.nama.trim()){ toast("Nama murid wajib diisi"); return; }
+      const ms=DB.murids();
+      if(editing){ const mm=ms.find(x=>x.id===id); Object.assign(mm,{nama:s.nama,hp:s.hp,level:s.level,spp:s.spp,kuotaAwal:Number(s.kuotaAwal)||0}); }
+      else ms.push({ id:DB.uid("MRD"), nama:s.nama, hp:s.hp, level:s.level||CONFIG.levels[1],
+        waktuMasuk:new Date().toISOString(), spp:"Lunas", kuotaAwal:Number(s.kuotaAwal)||0 });
+      DB.saveMurids(ms); toast(editing?"✅ Tersimpan":"🎓 Murid ditambahkan"); App.closeOverlay(); App.render();
+    }}, editing?"✅ Simpan":"🎓 Daftarkan Murid")
+  );
+  return Sheet(editing?"Edit Murid":"Murid Baru", body, foot);
+}
+
+/* ---------------------------------------------------------------------------
+   13. GURU LIST + FORM
+   --------------------------------------------------------------------------- */
+function GuruListView(){
+  const gurus=DB.gurus();
+  const list=h("div",{class:"card"});
+  if(gurus.length===0) list.appendChild(h("div",{class:"empty"}, "Belum ada guru. Tekan + untuk menambah."));
+  gurus.forEach(g=>{
+    const sesi=DB.logs().filter(l=>l.guruId===g.id).length;
+    list.appendChild(h("div",{class:"row",onClick:()=>App.openOverlay(()=>GuruFormSheet(g.id))},
+      h("div",{class:"avatar"}, F.initials(g.nama)),
+      h("div",{class:"info"}, h("div",{class:"name"}, g.nama), h("div",{class:"meta"}, sesi+" sesi ditangani")),
+      h("div",{class:"chev"}, "›")
+    ));
+  });
+  return h("div",{class:"wrap"}, h("div",{class:"section-title"}, "👩‍🏫 Data Guru"), list);
+}
+function GuruFormSheet(id){
+  const editing=!!id;
+  const g=editing?DB.gurus().find(x=>x.id===id):null;
+  const s={ nama:g?g.nama:"" };
+  const body=h("div",{class:"sheet-body"}, textField("Nama Guru", s.nama, v=>s.nama=v, true));
+  const foot=h("div",{class:"sheet-foot"},
+    editing? h("button",{class:"btn btn-danger-line",style:"flex:0 0 auto;width:auto;padding:0 16px",onClick:()=>{
+      if(confirm("Hapus guru ini?")){ DB.saveGurus(DB.gurus().filter(x=>x.id!==id)); toast("🗑️ Dihapus"); App.closeOverlay(); App.render(); }
+    }}, "🗑️"):null,
+    h("button",{class:"btn btn-primary",onClick:()=>{
+      if(!s.nama.trim()){ toast("Nama guru wajib diisi"); return; }
+      const gs=DB.gurus();
+      if(editing){ gs.find(x=>x.id===id).nama=s.nama; } else gs.push({ id:DB.uid("GRU"), nama:s.nama });
+      DB.saveGurus(gs); toast(editing?"✅ Tersimpan":"👩‍🏫 Guru ditambahkan"); App.closeOverlay(); App.render();
+    }}, editing?"✅ Simpan":"👩‍🏫 Tambah Guru")
+  );
+  return Sheet(editing?"Edit Guru":"Guru Baru", body, foot);
+}
+
+/* ---------------------------------------------------------------------------
+   14. FORM FIELD BUILDERS
+   --------------------------------------------------------------------------- */
+function textField(label,val,onChange,req,type){
+  const inp=h("input",{class:"control",type:type||"text",value:val||""});
+  inp.addEventListener("input",e=>onChange(e.target.value));
+  return h("div",{class:"field"}, labelEl(label,req), inp);
+}
+function numField(label,val,onChange,req){
+  const inp=h("input",{class:"control",type:"number",inputmode:"numeric",value:(val==null?"":val)});
+  inp.addEventListener("input",e=>onChange(e.target.value===""?null:Number(e.target.value)));
+  return h("div",{class:"field"}, labelEl(label,req), inp);
+}
+function timeField(label,val,onChange){
+  const inp=h("input",{class:"control",type:"time",value:val||""});
+  inp.addEventListener("input",e=>onChange(e.target.value));
+  return h("div",{class:"field"}, labelEl(label,true), inp);
+}
+function selectField(label,options,val,onChange,req){
+  const sel=h("select",{class:"control"});
+  sel.appendChild(h("option",{value:""}, "— pilih —"));
+  options.forEach(o=>{ const opt=h("option",{value:o.v}, o.t); if(o.v===val) opt.selected=true; sel.appendChild(opt); });
+  sel.addEventListener("change",e=>onChange(e.target.value));
+  return h("div",{class:"field"}, labelEl(label,req), sel);
+}
+function textareaField(label,val,onChange){
+  const ta=h("textarea",{class:"control",placeholder:"Opsional…"}, val||"");
+  ta.addEventListener("input",e=>onChange(e.target.value));
+  return h("div",{class:"field"}, labelEl(label,false), ta);
+}
+function imageField(label,val,onChange){
+  const preview=val? h("img",{src:val,style:"width:100%;border-radius:13px;margin-top:8px;max-height:220px;object-fit:cover"}):null;
+  const inp=h("input",{type:"file",accept:"image/*",style:"display:none"});
+  inp.addEventListener("change",e=>{ const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=()=>onChange(r.result); r.readAsDataURL(f); });
+  const btn=h("button",{class:"btn btn-line",onClick:()=>inp.click()}, val?"🔄 Ganti Foto":"📷 Ambil / Unggah Foto");
+  return h("div",{class:"field"}, labelEl(label,false), btn, inp, preview);
+}
+function labelEl(label,req){ return h("label",{}, label, req?h("span",{class:"req"}," *"):""); }
+function calcBox(lbl,val){ return h("div",{class:"calc-box"},
+  h("div",{class:"big"}, val), h("div",{class:"lbl"}, lbl)); }
+
+/* ---------------------------------------------------------------------------
+   15. SHEET WRAPPERS
+   --------------------------------------------------------------------------- */
+function Sheet(title, bodyEl, footEl){
+  const sheet=h("div",{class:"sheet"},
+    h("div",{class:"sheet-head"}, h("h2",{}, title),
+      h("button",{class:"x",onClick:App.closeOverlay}, "✕")),
+    bodyEl, footEl
+  );
+  return h("div",{class:"overlay",onClick:e=>{ if(e.target.classList.contains("overlay")) App.closeOverlay(); }}, sheet);
+}
+function SheetRaw(title, contentEl){ // content manages its own body+foot (stepper)
+  const sheet=h("div",{class:"sheet"},
+    h("div",{class:"sheet-head"}, h("h2",{}, title),
+      h("button",{class:"x",onClick:App.closeOverlay}, "✕")),
+    contentEl
+  );
+  return h("div",{class:"overlay",onClick:e=>{ if(e.target.classList.contains("overlay")) App.closeOverlay(); }}, sheet);
+}
+
+/* ---------------------------------------------------------------------------
+   16. BOOT
+   --------------------------------------------------------------------------- */
+App.mount();
+</script>
+</body>
+</html>
