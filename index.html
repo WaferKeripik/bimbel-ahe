@@ -225,6 +225,16 @@ const CONFIG = {
   ],
   // Gaji guru = persentase ini × SPP murid yang diajar (per sesi). Admin bisa ubah.
   defaultPersenGuru:20, // %
+  // Nomor WA pengirim notifikasi (identitas bimbel)
+  waPengirim:"085809959993",
+  // Hari sebelum jatuh tempo untuk mulai ingatkan (admin bisa ubah)
+  defaultIngatkanHari:3,
+  // Template pesan WA (admin bisa edit). {nama}{wali}{nominal}{tipe}{tempo}{level}{guru}{materi}{halaman}{durasi}{bimbel}
+  defaultTemplates:{
+    tagihan:"Halo Bapak/Ibu {wali}, kami dari {bimbel} mengingatkan bahwa SPP ananda *{nama}* (paket {tipe}) sebesar *{nominal}* akan jatuh tempo pada *{tempo}*. Mohon segera melakukan pembayaran. Terima kasih 🙏",
+    ultah:"Selamat Ulang Tahun untuk ananda *{nama}*! 🎉🎂 Semoga makin pintar, sehat, dan ceria. Salam hangat dari keluarga besar {bimbel} 💜",
+    progres:"Halo Bapak/Ibu {wali}, laporan belajar ananda *{nama}* hari ini di {bimbel}:\n📘 Materi: {materi}\n📄 Halaman: {halaman}\n⏱️ Durasi: {durasi}\n👩‍🏫 Guru: {guru}\nTerima kasih atas kepercayaannya 🙏",
+  },
   users:[
     { email:"admin@bimbelahe.com",  role:"admin", nama:"Administrator" },
     { email:"guru1@bimbelahe.com",  role:"guru",  nama:"Bu Sari" },
@@ -241,9 +251,16 @@ const DB = {
   uid(p){ return p+"_"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); },
   murids(){ return DB.read(DB.k.murid); }, gurus(){ return DB.read(DB.k.guru); }, logs(){ return DB.read(DB.k.log); },
   saveMurids(v){ DB.write(DB.k.murid,v); }, saveGurus(v){ DB.write(DB.k.guru,v); }, saveLogs(v){ DB.write(DB.k.log,v); },
-  cfg(){ const c=localStorage.getItem(DB.k.cfg);
-    if(c) return JSON.parse(c);
-    return { sppTypes:CONFIG.defaultSppTypes.map(x=>({...x})), persenGuru:CONFIG.defaultPersenGuru }; },
+  cfg(){
+    const base={ sppTypes:CONFIG.defaultSppTypes.map(x=>({...x})), persenGuru:CONFIG.defaultPersenGuru,
+             ingatkanHari:CONFIG.defaultIngatkanHari, templates:{...CONFIG.defaultTemplates}, namaBimbel:CONFIG.appName,
+             waPengirim:CONFIG.waPengirim };
+    const c=localStorage.getItem(DB.k.cfg);
+    if(!c) return base;
+    const saved=JSON.parse(c);
+    // migrasi: lengkapi field yang mungkin belum ada di config lama
+    return { ...base, ...saved, templates:{ ...base.templates, ...(saved.templates||{}) } };
+  },
   saveCfg(v){ localStorage.setItem(DB.k.cfg,JSON.stringify(v)); },
 
   seed(){
@@ -256,10 +273,15 @@ const DB = {
     }
     if(DB.read(DB.k.murid).length===0){
       const now=Date.now();
+      const iso=(d)=>new Date(d).toISOString().slice(0,10);
+      const today=new Date();
+      const tempoDekat=iso(new Date(today.getFullYear(),today.getMonth(),today.getDate()+2)); // 2 hari lagi
+      const tempoLewat=iso(new Date(today.getFullYear(),today.getMonth(),today.getDate()-3)); // sudah lewat
+      const ultahHariIni="2015-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
       DB.saveMurids([
-        { id:DB.uid("MRD"), nama:"Andi Pratama", email:"murid1@bimbelahe.com", hp:"081234567801", level:"SD Kelas 4", waktuMasuk:new Date(now-86400000*3).toISOString(), spp:"Lunas", sppTipe:"Intensif", kuotaAwal:12 },
-        { id:DB.uid("MRD"), nama:"Bunga Lestari", email:"", hp:"081234567802", level:"SMP", waktuMasuk:new Date(now-86400000*8).toISOString(), spp:"Belum Lunas", sppTipe:"Reguler", kuotaAwal:8 },
-        { id:DB.uid("MRD"), nama:"Citra Dewi", email:"", hp:"081234567803", level:"SD Kelas 2", waktuMasuk:new Date(now-86400000).toISOString(), spp:"Lunas", sppTipe:"Privat", kuotaAwal:16 },
+        { id:DB.uid("MRD"), nama:"Andi Pratama", email:"murid1@bimbelahe.com", hp:"081234567801", waliHp:"081234567801", lahir:ultahHariIni, tempo:tempoDekat, level:"SD Kelas 4", waktuMasuk:new Date(now-86400000*3).toISOString(), spp:"Belum Lunas", sppTipe:"Intensif", kuotaAwal:12 },
+        { id:DB.uid("MRD"), nama:"Bunga Lestari", email:"", hp:"081234567802", waliHp:"081234567802", lahir:"2012-05-20", tempo:tempoLewat, level:"SMP", waktuMasuk:new Date(now-86400000*8).toISOString(), spp:"Belum Lunas", sppTipe:"Reguler", kuotaAwal:8 },
+        { id:DB.uid("MRD"), nama:"Citra Dewi", email:"", hp:"081234567803", waliHp:"081234567803", lahir:"2017-09-10", tempo:"", level:"SD Kelas 2", waktuMasuk:new Date(now-86400000).toISOString(), spp:"Lunas", sppTipe:"Privat", kuotaAwal:16 },
       ]);
     }
     if(DB.read(DB.k.log).length===0){
@@ -306,6 +328,28 @@ const F = {
     if(h<24) return h+" jam lalu"; return Math.floor(h/24)+" hari lalu"; },
   rupiah(n){ return "Rp "+(Number(n)||0).toLocaleString("id-ID"); },
   monthLabel(y,m){ return new Date(y,m,1).toLocaleDateString("id-ID",{month:"long",year:"numeric"}); },
+  fmtTanggal(iso){ if(!iso) return "—"; return new Date(iso).toLocaleDateString("id-ID",{day:"2-digit",month:"long",year:"numeric"}); },
+  // Normalisasi nomor HP Indonesia ke format internasional utk wa.me (0812 -> 62812)
+  waNumber(hp){ let n=(hp||"").replace(/[^0-9]/g,""); if(!n) return ""; if(n.startsWith("0")) n="62"+n.slice(1);
+    else if(n.startsWith("62")) {} else if(n.startsWith("8")) n="62"+n; return n; },
+  waLink(hp,pesan){ const n=F.waNumber(hp); return "https://wa.me/"+n+"?text="+encodeURIComponent(pesan); },
+  // Isi template dengan data murid
+  isiTemplate(tpl,data){ return (tpl||"").replace(/\{(\w+)\}/g,(_,k)=> data[k]!=null?data[k]:("{"+k+"}")); },
+  // Berapa hari lagi ke jatuh tempo (negatif = sudah lewat). null jika tak ada tanggal.
+  hariKeTempo(tempoIso){ if(!tempoIso) return null; const t=new Date(tempoIso); t.setHours(0,0,0,0);
+    const now=new Date(); now.setHours(0,0,0,0); return Math.round((t-now)/86400000); },
+  isUltahHariIni(lahirIso){ if(!lahirIso) return false; const d=new Date(lahirIso); const n=new Date();
+    return d.getDate()===n.getDate() && d.getMonth()===n.getMonth(); },
+  umur(lahirIso){ if(!lahirIso) return null; const d=new Date(lahirIso); const n=new Date();
+    let a=n.getFullYear()-d.getFullYear(); const mm=n.getMonth()-d.getMonth();
+    if(mm<0||(mm===0&&n.getDate()<d.getDate())) a--; return a; },
+  // Data untuk mengisi template dari sebuah murid (+ opsional log sesi)
+  waData(m,log){ const c=DB.cfg();
+    return { nama:m.nama, wali:m.waliNama||"Wali", nominal:F.rupiah(F.sppNominal(m.sppTipe)), tipe:m.sppTipe,
+      tempo:F.fmtTanggal(m.tempo), level:m.level, bimbel:c.namaBimbel||CONFIG.appName,
+      guru:log?F.guruName(log.guruId):"", materi:log?(log.level||"-"):"",
+      halaman:log&&log.pageAwal!=null&&log.pageAkhir!=null?(log.pageAwal+"–"+log.pageAkhir+" ("+F.totalPage(log.pageAwal,log.pageAkhir)+" hal)"):"-",
+      durasi:log?(log.durasi||"-"):"" }; },
   // date range helpers
   sameDay(iso,ref){ const d=new Date(iso); return d.toDateString()===ref.toDateString(); },
   inWeek(iso,ref){ const d=new Date(iso); const start=new Date(ref); start.setDate(ref.getDate()-((ref.getDay()+6)%7)); start.setHours(0,0,0,0);
@@ -397,11 +441,13 @@ function Shell(){
     h("div",{class:"me"}, h("button",{onClick:()=>{ if(confirm("Keluar dari aplikasi?")){ Session.clear(); App.tab=null; App.render(); } }}, "Keluar")));
 
   const tabsFor={
-    admin:[["queue","📋","Antrian"],["murid","🎓","Murid"],["guru","👩‍🏫","Guru"],["payroll","💰","Payroll"],["setting","⚙️","Atur"]],
+    admin:[["queue","📋","Antrian"],["murid","🎓","Murid"],["notif","📣","Notif WA"],["payroll","💰","Payroll"],["setting","⚙️","Atur"]],
     guru:[["queue","📋","Antrian"],["mystats","📊","Statistik Saya"]],
     murid:[["me","📈","Progres Saya"]],
   }[role];
-  if(!tabsFor.some(t=>t[0]===App.tab)) App.tab=tabsFor[0][0];
+  // halaman tambahan yang valid walau tak tampil di tab bar
+  const extraPages={ admin:["guru"], guru:[], murid:[] }[role]||[];
+  if(!tabsFor.some(t=>t[0]===App.tab) && !extraPages.includes(App.tab)) App.tab=tabsFor[0][0];
 
   let body;
   switch(App.tab){
@@ -410,6 +456,7 @@ function Shell(){
     case "guru":  body=GuruListView(); break;
     case "payroll": body=PayrollView(); break;
     case "setting": body=SettingView(); break;
+    case "notif": body=NotifView(); break;
     case "mystats": body=GuruStatsView(); break;
     case "me":    body=MuridSelfView(); break;
     default: body=QueueView();
@@ -502,8 +549,10 @@ function LogDetailSheet(logId){
       foot.appendChild(h("div",{style:"text-align:center;width:100%;color:var(--muted);font-size:13px;font-weight:600"}, "Sedang ditangani "+F.guruName(log.guruId)));
     }
   } else { // Done
-    if(role==="admin") foot.appendChild(h("button",{class:"btn btn-line",onClick:()=>App.openOverlay(()=>LogFormSheet(log.id))}, "✏️  Edit Catatan"));
-    else foot.appendChild(h("div",{style:"text-align:center;width:100%;color:var(--ok);font-size:13px;font-weight:700"}, "✅ Sesi selesai"));
+    if(role==="admin"){
+      foot.appendChild(h("button",{class:"btn btn-line",style:"flex:0 0 auto;width:auto;padding:0 16px",onClick:()=>App.openOverlay(()=>LogFormSheet(log.id))}, "✏️"));
+      foot.appendChild(waBtn("📘  Kirim Laporan ke Wali via WA", m?m.waliHp:"", F.isiTemplate(DB.cfg().templates.progres, F.waData(m,log))));
+    } else foot.appendChild(h("div",{style:"text-align:center;width:100%;color:var(--ok);font-size:13px;font-weight:700"}, "✅ Sesi selesai"));
   }
   return Sheet("Detail Antrian", body, foot);
 }
@@ -597,17 +646,27 @@ function MuridListView(){
         h("div",{class:"meta"}, m.level+"  ·  "+m.sppTipe+"  ·  Sisa "+sisa+"/"+m.kuotaAwal),
         h("div",{class:"quota-wrap"}, h("div",{class:"quota-bar"+(sisa<=2?" low":""),style:"width:"+pct+"%"}))),
       h("div",{class:"chev"}, "›"))); });
-  return h("div",{class:"wrap"}, h("div",{class:"section-title"}, "🎓 Data Murid"), list);
+  return h("div",{class:"wrap"},
+    h("div",{class:"section-title"}, h("span",{}, "🎓 Data Murid"),
+      h("button",{style:"margin-left:auto;background:var(--brand-tint2);color:var(--brand-dark);border-radius:10px;padding:7px 12px;font-weight:700;font-size:12px",onClick:()=>App.go("guru")}, "👩‍🏫 Kelola Guru")),
+    list);
 }
 function MuridDetailSheet(id){
   const m=F.murid(id); const sisa=F.sisaKuota(id), used=F.sesiTerpakai(id);
   const body=h("div",{},
     h("div",{class:"detail-hero"}, h("div",{class:"av"}, F.initials(m.nama)), h("div",{class:"nm"}, m.nama), h("div",{class:"st"}, m.level)),
     kv("Nomor HP", m.hp||"—"), kv("Email", m.email||"—"),
+    kv("Wali Murid", (m.waliNama||"—")+(m.waliHp?(" · "+m.waliHp):"")),
+    kv("Tanggal Lahir", m.lahir?F.fmtTanggal(m.lahir):"—"),
     kv("Tipe SPP", m.sppTipe+" ("+F.rupiah(F.sppNominal(m.sppTipe))+")"),
     kv("Status SPP", badge(m.spp, m.spp==="Lunas"?"b-ok":"b-warn")),
+    kv("Jatuh Tempo SPP", m.tempo?F.fmtTanggal(m.tempo):"—"),
     kv("Kuota Awal", m.kuotaAwal+" sesi"), kv("Sesi Terpakai", used+" sesi"),
-    kv("Sisa Kuota Sesi", h("b",{style:"color:var(--brand-dark);font-size:16px"}, sisa+" sesi")));
+    kv("Sisa Kuota Sesi", h("b",{style:"color:var(--brand-dark);font-size:16px"}, sisa+" sesi")),
+    // Tombol WA manual
+    h("div",{style:"padding:14px 18px;display:flex;flex-direction:column;gap:10px"},
+      waBtn("💳  Kirim Tagihan SPP via WA", m.waliHp, F.isiTemplate(DB.cfg().templates.tagihan, F.waData(m))),
+      F.isUltahHariIni(m.lahir)? waBtn("🎂  Kirim Ucapan Ultah via WA", m.waliHp, F.isiTemplate(DB.cfg().templates.ultah, F.waData(m)), "btn-accent"):null));
   const foot=h("div",{class:"sheet-foot"},
     h("button",{class:"btn btn-danger-line",style:"flex:0 0 auto;width:auto;padding:0 16px",onClick:()=>{
       if(confirm("Hapus murid "+m.nama+"?")){ DB.saveMurids(DB.murids().filter(x=>x.id!==id)); toast("🗑️ Dihapus"); App.closeOverlay(); App.render(); } }}, "🗑️"),
@@ -620,20 +679,26 @@ function MuridDetailSheet(id){
 function MuridFormSheet(id){
   const editing=!!id; const m=editing?F.murid(id):null; const cfg=DB.cfg();
   const s={ nama:m?m.nama:"", hp:m?m.hp:"", email:m?m.email:"", level:m?m.level:CONFIG.levels[1],
+    waliNama:m?(m.waliNama||""):"", waliHp:m?(m.waliHp||""):"", lahir:m?(m.lahir||""):"", tempo:m?(m.tempo||""):"",
     spp:m?m.spp:"Lunas", sppTipe:m?m.sppTipe:cfg.sppTypes[0].nama, kuotaAwal:m?m.kuotaAwal:12 };
   const body=h("div",{class:"sheet-body"},
     textField("Nama Murid", s.nama, v=>s.nama=v, true),
-    textField("Nomor HP", s.hp, v=>s.hp=v, false, "tel"),
+    dateField("Tanggal Lahir (untuk ucapan ultah)", s.lahir, v=>s.lahir=v),
+    textField("Nomor HP Murid", s.hp, v=>s.hp=v, false, "tel"),
+    textField("Nama Wali Murid", s.waliNama, v=>s.waliNama=v, false),
+    textField("Nomor WA Wali Murid (untuk notifikasi)", s.waliHp, v=>s.waliHp=v, false, "tel"),
     textField("Email (untuk login murid/ortu)", s.email, v=>s.email=v, false, "email"),
     selectField("Tipe SPP", cfg.sppTypes.map(t=>({v:t.nama,t:t.nama+" — "+F.rupiah(t.nominal)})), s.sppTipe, v=>s.sppTipe=v, true),
-    !editing? h("div",{class:"calc-box",style:"margin-bottom:16px"}, h("div",{}, h("div",{class:"lbl"}, "Field dinamis (Sisa Kuota, Level, Status SPP) diperbarui otomatis saat sesi berjalan."))):null,
+    dateField("Tanggal Jatuh Tempo SPP", s.tempo, v=>s.tempo=v),
+    !editing? h("div",{class:"calc-box",style:"margin-bottom:16px"}, h("div",{}, h("div",{class:"lbl"}, "Field dinamis (Sisa Kuota, Level) diperbarui otomatis saat sesi berjalan."))):null,
     numField("Kuota Awal (sesi)", s.kuotaAwal, v=>s.kuotaAwal=v, true),
     editing? selectField("Level Saat Ini", CONFIG.levels.map(l=>({v:l,t:l})), s.level, v=>s.level=v, false):null,
-    editing? selectField("Status SPP", ["Lunas","Belum Lunas","Jatuh Tempo"].map(x=>({v:x,t:x})), s.spp, v=>s.spp=v, false):null);
+    selectField("Status SPP", ["Lunas","Belum Lunas","Jatuh Tempo"].map(x=>({v:x,t:x})), s.spp, v=>s.spp=v, false));
   const foot=h("div",{class:"sheet-foot"}, h("button",{class:"btn btn-primary",onClick:()=>{
     if(!s.nama.trim()){ toast("Nama murid wajib diisi"); return; } const ms=DB.murids();
-    if(editing){ Object.assign(ms.find(x=>x.id===id),{nama:s.nama,hp:s.hp,email:s.email,level:s.level,spp:s.spp,sppTipe:s.sppTipe,kuotaAwal:Number(s.kuotaAwal)||0}); }
-    else ms.push({ id:DB.uid("MRD"), nama:s.nama, hp:s.hp, email:s.email, level:s.level||CONFIG.levels[1], waktuMasuk:new Date().toISOString(), spp:"Lunas", sppTipe:s.sppTipe, kuotaAwal:Number(s.kuotaAwal)||0 });
+    const fields={nama:s.nama,hp:s.hp,email:s.email,level:s.level,spp:s.spp,sppTipe:s.sppTipe,kuotaAwal:Number(s.kuotaAwal)||0,waliNama:s.waliNama,waliHp:s.waliHp,lahir:s.lahir,tempo:s.tempo};
+    if(editing){ Object.assign(ms.find(x=>x.id===id),fields); }
+    else ms.push({ id:DB.uid("MRD"), waktuMasuk:new Date().toISOString(), ...fields, level:s.level||CONFIG.levels[1] });
     DB.saveMurids(ms); toast(editing?"✅ Tersimpan":"🎓 Murid ditambahkan"); App.closeOverlay(); App.render(); }}, editing?"✅ Simpan":"🎓 Daftarkan Murid"));
   return Sheet(editing?"Edit Murid":"Murid Baru", body, foot);
 }
@@ -729,13 +794,137 @@ function SettingView(){
   list.appendChild(addBtn);
   wrap.appendChild(list);
 
+  // ----- Pengaturan Notifikasi WA -----
+  wrap.appendChild(h("div",{class:"section-title"}, "📣 Notifikasi WhatsApp"));
+  const waField=textField("Nomor WA Pengirim (identitas bimbel)", cfg.waPengirim, v=>{}, false, "tel");
+  const waInp=waField.querySelector("input");
+  const bimbelField=textField("Nama Bimbel (muncul di pesan)", cfg.namaBimbel, v=>{}, false);
+  const bimbelInp=bimbelField.querySelector("input");
+  const ingatField=numField("Ingatkan SPP berapa hari sebelum jatuh tempo", cfg.ingatkanHari, v=>{}, false);
+  const ingatInp=ingatField.querySelector("input");
+  const tplTag=textareaField("Template Pesan Tagihan SPP", cfg.templates.tagihan, v=>{});
+  const tplTagTa=tplTag.querySelector("textarea");
+  const tplUlt=textareaField("Template Pesan Ulang Tahun", cfg.templates.ultah, v=>{});
+  const tplUltTa=tplUlt.querySelector("textarea");
+  const tplProg=textareaField("Template Pesan Laporan Progres", cfg.templates.progres, v=>{});
+  const tplProgTa=tplProg.querySelector("textarea");
+  wrap.appendChild(h("div",{class:"card",style:"padding:18px;margin-bottom:14px"},
+    waField, bimbelField, ingatField,
+    h("div",{class:"calc-box",style:"margin-bottom:16px"}, h("div",{}, h("div",{class:"lbl"}, "Placeholder: {nama} {wali} {nominal} {tipe} {tempo} {level} {guru} {materi} {halaman} {durasi} {bimbel}"))),
+    tplTag, tplUlt, tplProg));
+
   wrap.appendChild(h("button",{class:"btn btn-primary",onClick:()=>{
     const persen=Number(pInp.value)||0;
     const types=rowRefs.map(r=>({ nama:(r.nama.value||"").trim(), nominal:Number(r.nom.value)||0 })).filter(t=>t.nama);
     if(types.length===0){ toast("Minimal 1 tipe SPP"); return; }
-    DB.saveCfg({ persenGuru:persen, sppTypes:types }); toast("✅ Pengaturan disimpan"); App.render();
-  }}, "✅ Simpan Pengaturan"));
+    DB.saveCfg({ persenGuru:persen, sppTypes:types,
+      waPengirim:(waInp.value||"").trim(), namaBimbel:(bimbelInp.value||"").trim()||CONFIG.appName,
+      ingatkanHari:Number(ingatInp.value)||3,
+      templates:{ tagihan:tplTagTa.value, ultah:tplUltTa.value, progres:tplProgTa.value } });
+    toast("✅ Pengaturan disimpan"); App.render();
+  }}, "✅ Simpan Semua Pengaturan"));
   return wrap;
+}
+
+/* -------------------- WA BUTTON HELPER -------------------- */
+// Buka WhatsApp dengan pesan terisi (semi-otomatis: admin tinggal tekan kirim)
+function kirimWA(hp,pesan){
+  if(!hp){ toast("⚠️ Nomor WA belum diisi"); return; }
+  const url=F.waLink(hp,pesan);
+  window.open(url,"_blank");
+}
+function waBtn(label,hp,pesan,cls){
+  return h("button",{class:"btn "+(cls||"btn-ok"),onClick:(e)=>{ e.stopPropagation(); kirimWA(hp,pesan); }}, label);
+}
+
+/* -------------------- PUSAT NOTIFIKASI WA (admin) -------------------- */
+function NotifView(){
+  const cfg=DB.cfg(); const murids=DB.murids();
+  const ingatkan=Number(cfg.ingatkanHari)||3;
+
+  // 1) Jatuh tempo: SPP belum lunas & tempo sudah lewat / <= ingatkan hari lagi
+  const tagihan=murids.filter(m=>{
+    if(m.spp==="Lunas") return false;
+    const d=F.hariKeTempo(m.tempo);
+    return d!=null && d<=ingatkan;
+  }).sort((a,b)=>(F.hariKeTempo(a.tempo)??999)-(F.hariKeTempo(b.tempo)??999));
+
+  // 2) Ulang tahun hari ini
+  const ultah=murids.filter(m=>F.isUltahHariIni(m.lahir));
+
+  // 3) Progres terbaru (sesi Done hari ini) untuk broadcast ke wali
+  const now=new Date();
+  const progres=DB.logs().filter(l=>l.status==="Done" && F.sameDay(l.waktuMasuk,now))
+    .map(l=>({ l, m:F.murid(l.muridId) })).filter(x=>x.m);
+
+  const wrap=h("div",{class:"wrap"});
+  wrap.appendChild(h("div",{class:"section-title"}, "📣 Pusat Notifikasi WhatsApp"));
+  wrap.appendChild(h("div",{class:"total-banner acc",style:"margin-bottom:16px"},
+    h("div",{class:"l"}, "Nomor Pengirim Bimbel"),
+    h("div",{class:"v",style:"font-size:22px"}, cfg.waPengirim || CONFIG.waPengirim || "—"),
+    h("div",{class:"l",style:"margin-top:6px"}, "Tekan tombol → WhatsApp terbuka dengan pesan siap kirim")));
+
+  // ----- Section: Tagihan SPP -----
+  wrap.appendChild(sectionHead("💳 Tagihan SPP Jatuh Tempo", tagihan.length));
+  const cTag=h("div",{class:"card",style:"margin-bottom:18px"});
+  if(tagihan.length===0) cTag.appendChild(h("div",{class:"empty"}, h("span",{class:"em"},"✅"), "Tidak ada tagihan jatuh tempo."));
+  tagihan.forEach(m=>{
+    const d=F.hariKeTempo(m.tempo);
+    const ket = d<0 ? ("Telat "+Math.abs(d)+" hari") : d===0 ? "Jatuh tempo HARI INI" : (d+" hari lagi");
+    const pesan=F.isiTemplate(cfg.templates.tagihan, F.waData(m));
+    cTag.appendChild(notifRow(m, F.sppTipe?"":"", "💳", ket+"  ·  "+F.rupiah(F.sppNominal(m.sppTipe)), m.waliHp, pesan, d<0));
+  });
+  // broadcast semua tagihan
+  if(tagihan.length>0) cTag.appendChild(h("div",{style:"padding:10px 14px 14px"},
+    h("button",{class:"btn btn-accent",onClick:()=>broadcast(tagihan.map(m=>({hp:m.waliHp,pesan:F.isiTemplate(cfg.templates.tagihan,F.waData(m))})))}, "📤 Broadcast Semua Tagihan ("+tagihan.length+")")));
+  wrap.appendChild(cTag);
+
+  // ----- Section: Ulang Tahun -----
+  wrap.appendChild(sectionHead("🎂 Ulang Tahun Hari Ini", ultah.length));
+  const cUlt=h("div",{class:"card",style:"margin-bottom:18px"});
+  if(ultah.length===0) cUlt.appendChild(h("div",{class:"empty"}, h("span",{class:"em"},"🎈"), "Tidak ada yang ulang tahun hari ini."));
+  ultah.forEach(m=>{ const umur=F.umur(m.lahir); const pesan=F.isiTemplate(cfg.templates.ultah, F.waData(m));
+    cUlt.appendChild(notifRow(m, "", "🎂", (umur!=null?("Ke-"+umur+" tahun 🎉"):"Selamat ulang tahun!"), m.waliHp, pesan)); });
+  wrap.appendChild(cUlt);
+
+  // ----- Section: Progres Hari Ini -----
+  wrap.appendChild(sectionHead("📘 Laporan Progres Hari Ini", progres.length));
+  const cProg=h("div",{class:"card"});
+  if(progres.length===0) cProg.appendChild(h("div",{class:"empty"}, h("span",{class:"em"},"📭"), "Belum ada sesi selesai hari ini."));
+  progres.forEach(({l,m})=>{ const pesan=F.isiTemplate(cfg.templates.progres, F.waData(m,l));
+    cProg.appendChild(notifRow(m, "", "📘", (l.level||"Sesi")+"  ·  "+(F.guruName(l.guruId)||"-"), m.waliHp, pesan)); });
+  if(progres.length>0) cProg.appendChild(h("div",{style:"padding:10px 14px 14px"},
+    h("button",{class:"btn btn-accent",onClick:()=>broadcast(progres.map(({l,m})=>({hp:m.waliHp,pesan:F.isiTemplate(cfg.templates.progres,F.waData(m,l))})))}, "📤 Broadcast Semua Laporan ("+progres.length+")")));
+  wrap.appendChild(cProg);
+
+  return wrap;
+}
+function sectionHead(title,count){ return h("div",{class:"section-title",style:"margin-top:4px"},
+  h("span",{}, title), h("span",{style:"margin-left:auto;background:var(--accent-tint2);color:var(--accent-dark);border-radius:999px;padding:2px 10px;font-size:11px;font-weight:800"}, String(count))); }
+function notifRow(m, _unused, em, meta, hp, pesan, urgent){
+  return h("div",{class:"row"+(urgent?" hl":"")},
+    h("div",{class:"avatar"+(urgent?" acc":"")}, em),
+    h("div",{class:"info",onClick:()=>App.openOverlay(()=>PreviewWASheet(m,hp,pesan))},
+      h("div",{class:"name"}, m.nama),
+      h("div",{class:"meta"}, meta + (hp?"":"  · ⚠️ no WA kosong"))),
+    h("button",{class:"btn btn-ok",style:"width:auto;min-height:42px;padding:0 14px;flex:0 0 auto",onClick:()=>kirimWA(hp,pesan)}, "WA"));
+}
+// Preview + edit pesan sebelum kirim
+function PreviewWASheet(m,hp,pesan){
+  const ta=h("textarea",{class:"control",style:"min-height:180px"}, pesan);
+  const body=h("div",{class:"sheet-body"},
+    h("div",{class:"kv",style:"border:none;padding:0 0 12px"}, h("div",{class:"k"}, "Kirim ke"), h("div",{class:"v"}, (m.waliNama||"Wali")+" — "+(hp||"⚠️ kosong"))),
+    h("div",{class:"field"}, h("label",{}, "Isi Pesan (bisa diedit)"), ta));
+  const foot=h("div",{class:"sheet-foot"}, h("button",{class:"btn btn-ok",onClick:()=>{ kirimWA(hp, ta.value); App.closeOverlay(); }}, "💬  Buka WhatsApp"));
+  return Sheet("Pratinjau Pesan WA", body, foot);
+}
+// Broadcast: buka beberapa chat WA berurutan (admin konfirmasi tiap pop-up)
+function broadcast(items){
+  const valid=items.filter(x=>x.hp);
+  if(valid.length===0){ toast("⚠️ Semua nomor WA kosong"); return; }
+  if(!confirm("Buka "+valid.length+" chat WhatsApp satu per satu? Browser mungkin minta izin membuka beberapa tab.")) return;
+  valid.forEach((x,i)=>{ setTimeout(()=>window.open(F.waLink(x.hp,x.pesan),"_blank"), i*700); });
+  toast("📤 Membuka "+valid.length+" chat WA…");
 }
 
 /* -------------------- GURU STATS (tanpa gaji) -------------------- */
@@ -828,6 +1017,8 @@ function numField(label,val,onChange,req){ const i=h("input",{class:"control",ty
   i.addEventListener("input",e=>onChange(e.target.value===""?null:Number(e.target.value))); return h("div",{class:"field"}, labelEl(label,req), i); }
 function timeField(label,val,onChange){ const i=h("input",{class:"control",type:"time",value:val||""});
   i.addEventListener("input",e=>onChange(e.target.value)); return h("div",{class:"field"}, labelEl(label,true), i); }
+function dateField(label,val,onChange,req){ const i=h("input",{class:"control",type:"date",value:val||""});
+  i.addEventListener("input",e=>onChange(e.target.value)); return h("div",{class:"field"}, labelEl(label,req), i); }
 function selectField(label,options,val,onChange,req){ const s=h("select",{class:"control"}); s.appendChild(h("option",{value:""}, "— pilih —"));
   options.forEach(o=>{ const op=h("option",{value:o.v}, o.t); if(o.v===val) op.selected=true; s.appendChild(op); });
   s.addEventListener("change",e=>onChange(e.target.value)); return h("div",{class:"field"}, labelEl(label,req), s); }
