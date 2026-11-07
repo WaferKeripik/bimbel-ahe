@@ -195,6 +195,22 @@
   .install-banner button{background:var(--grad);color:#fff;border-radius:11px;padding:9px 14px;font-weight:800;font-size:12.5px;flex:0 0 auto;}
   .install-banner .close{background:none;color:var(--muted);font-size:18px;padding:4px 6px;}
   @media(min-width:861px){ .fab{right:calc(50% - 430px + 18px);} }
+
+  /* ---- Eye-catching extras ---- */
+  .hero-card{background:var(--grad);color:#fff;border-radius:20px;padding:22px 18px;box-shadow:var(--shadow-lg);position:relative;overflow:hidden;}
+  .hero-card::after{content:"";position:absolute;top:-40px;right:-40px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.12);}
+  .hero-card::before{content:"";position:absolute;bottom:-50px;left:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.08);}
+  .btn-glow{background:var(--grad);color:#fff;box-shadow:0 0 0 0 rgba(124,58,237,.5);animation:glow 1.8s infinite;}
+  @keyframes glow{0%{box-shadow:0 0 0 0 rgba(124,58,237,.5)}70%{box-shadow:0 0 0 16px rgba(124,58,237,0)}100%{box-shadow:0 0 0 0 rgba(124,58,237,0)}}
+  .nfc-chip{border-radius:999px;padding:10px 14px;font-size:12.5px;font-weight:700;border:1.5px solid var(--line);background:#fff;}
+  .nfc-chip.murid{background:var(--brand-tint2);color:var(--brand-dark);border-color:#ddd6fe;}
+  .nfc-chip.guru{background:var(--accent-tint2);color:var(--accent-dark);border-color:#fde68a;}
+  .nfc-chip:active{transform:scale(.95);}
+  /* warna pelengkap: teal untuk aksen sekunder */
+  :root{ --teal:#0d9488; --teal-tint:#ccfbf1; --pink:#db2777; --pink-tint:#fce7f3; }
+  .stat:nth-child(3n+1)::before{background:var(--grad);}
+  .stat:nth-child(3n+2)::before{background:var(--grad-accent);}
+  .stat:nth-child(3n)::before{background:linear-gradient(135deg,#2dd4bf,#0d9488);}
 </style>
 </head>
 <body>
@@ -216,7 +232,7 @@
 /* -------------------- CONFIG -------------------- */
 const CONFIG = {
   appName:"Bimbel Ahe", tagline:"Manajemen Operasional Bimbel", logo:"📚",
-  levels:["TK","SD Kelas 1","SD Kelas 2","SD Kelas 3","SD Kelas 4","SD Kelas 5","SD Kelas 6","SMP","SMA"],
+  levels:["Ahe 1","Ahe 2","Ahe 3","Ahe 4","Ahe 5","Ahe 6","Ahe 7"],
   // Tipe SPP dengan nominal berbeda (admin bisa ubah lewat Pengaturan)
   defaultSppTypes:[
     { nama:"Reguler", nominal:300000 },
@@ -266,9 +282,9 @@ const DB = {
   seed(){
     if(DB.read(DB.k.guru).length===0){
       DB.saveGurus([
-        { id:DB.uid("GRU"), nama:"Bu Sari", email:"guru1@bimbelahe.com" },
-        { id:DB.uid("GRU"), nama:"Pak Budi", email:"guru2@bimbelahe.com" },
-        { id:DB.uid("GRU"), nama:"Bu Ratna", email:"" },
+        { id:DB.uid("GRU"), nfcId:"NFC-GRU-001", nama:"Bu Sari", email:"guru1@bimbelahe.com", hp:"" },
+        { id:DB.uid("GRU"), nfcId:"NFC-GRU-002", nama:"Pak Budi", email:"guru2@bimbelahe.com", hp:"" },
+        { id:DB.uid("GRU"), nfcId:"NFC-GRU-003", nama:"Bu Ratna", email:"", hp:"" },
       ]);
     }
     if(DB.read(DB.k.murid).length===0){
@@ -279,9 +295,9 @@ const DB = {
       const tempoLewat=iso(new Date(today.getFullYear(),today.getMonth(),today.getDate()-3)); // sudah lewat
       const ultahHariIni="2015-"+String(today.getMonth()+1).padStart(2,"0")+"-"+String(today.getDate()).padStart(2,"0");
       DB.saveMurids([
-        { id:DB.uid("MRD"), nama:"Andi Pratama", email:"murid1@bimbelahe.com", hp:"081234567801", waliHp:"081234567801", lahir:ultahHariIni, tempo:tempoDekat, level:"SD Kelas 4", waktuMasuk:new Date(now-86400000*3).toISOString(), spp:"Belum Lunas", sppTipe:"Intensif", kuotaAwal:12 },
-        { id:DB.uid("MRD"), nama:"Bunga Lestari", email:"", hp:"081234567802", waliHp:"081234567802", lahir:"2012-05-20", tempo:tempoLewat, level:"SMP", waktuMasuk:new Date(now-86400000*8).toISOString(), spp:"Belum Lunas", sppTipe:"Reguler", kuotaAwal:8 },
-        { id:DB.uid("MRD"), nama:"Citra Dewi", email:"", hp:"081234567803", waliHp:"081234567803", lahir:"2017-09-10", tempo:"", level:"SD Kelas 2", waktuMasuk:new Date(now-86400000).toISOString(), spp:"Lunas", sppTipe:"Privat", kuotaAwal:16 },
+        { id:DB.uid("MRD"), nfcId:"NFC-MRD-001", nama:"Andi Pratama", email:"murid1@bimbelahe.com", hp:"081234567801", waliNama:"Bpk. Pratama", waliHp:"081234567801", lahir:ultahHariIni, tempo:tempoDekat, level:"Ahe 4", waktuMasuk:new Date(now-86400000*3).toISOString(), spp:"Belum Lunas", sppTipe:"Intensif", kuotaAwal:12 },
+        { id:DB.uid("MRD"), nfcId:"NFC-MRD-002", nama:"Bunga Lestari", email:"", hp:"081234567802", waliNama:"Ibu Lestari", waliHp:"081234567802", lahir:"2012-05-20", tempo:tempoLewat, level:"Ahe 6", waktuMasuk:new Date(now-86400000*8).toISOString(), spp:"Belum Lunas", sppTipe:"Reguler", kuotaAwal:8 },
+        { id:DB.uid("MRD"), nfcId:"NFC-MRD-003", nama:"Citra Dewi", email:"", hp:"081234567803", waliNama:"Ibu Dewi", waliHp:"081234567803", lahir:"2017-09-10", tempo:"", level:"Ahe 2", waktuMasuk:new Date(now-86400000).toISOString(), spp:"Lunas", sppTipe:"Privat", kuotaAwal:16 },
       ]);
     }
     if(DB.read(DB.k.log).length===0){
@@ -357,6 +373,131 @@ const F = {
   inMonth(iso,ref){ const d=new Date(iso); return d.getFullYear()===ref.getFullYear() && d.getMonth()===ref.getMonth(); },
 };
 
+/* -------------------- VOICE (Text-to-Speech) -------------------- */
+const Voice = {
+  speak(text){
+    try{
+      if(!("speechSynthesis" in window)){ toast("🔇 Suara tidak didukung browser"); return; }
+      window.speechSynthesis.cancel();
+      const u=new SpeechSynthesisUtterance(text);
+      u.lang="id-ID"; u.rate=0.95; u.pitch=1;
+      const voices=window.speechSynthesis.getVoices();
+      const id=voices.find(v=>/id(-|_)?ID/i.test(v.lang)||/indonesia/i.test(v.name));
+      if(id) u.voice=id;
+      window.speechSynthesis.speak(u);
+    }catch(e){}
+  },
+  panggilAntri(nama){ Voice.speak("Ananda "+nama+", silakan menunggu antrian Anda."); },
+  panggilAssign(nama,guru){ Voice.speak("Ananda "+nama+", silakan menuju ke "+guru+". "+nama+", bersama "+guru+"."); },
+};
+
+/* -------------------- NFC ENGINE -------------------- */
+const NFC = {
+  supported(){ return ("NDEFReader" in window); },
+  reader:null, scanning:false,
+  async start(onTag){
+    if(!NFC.supported()){ return { ok:false, msg:"Perangkat/browser ini tidak mendukung Web NFC. Gunakan Chrome di HP Android." }; }
+    try{
+      NFC.reader=new NDEFReader();
+      await NFC.reader.scan();
+      NFC.scanning=true;
+      NFC.reader.onreading=(event)=>{
+        let id="";
+        try{ // baca record teks pertama; fallback ke serial number
+          for(const rec of event.message.records){
+            if(rec.recordType==="text"){ const dec=new TextDecoder(rec.encoding||"utf-8"); id=dec.decode(rec.data); break; } }
+        }catch(e){}
+        if(!id && event.serialNumber) id="SN-"+event.serialNumber;
+        if(id) onTag(id.trim());
+      };
+      return { ok:true };
+    }catch(e){ return { ok:false, msg:"Gagal memulai NFC: "+(e.message||e)+". Pastikan NFC aktif & izin diberikan." }; }
+  }
+};
+// Resolusi kartu NFC -> murid / guru, lalu jalankan aksi
+function handleNfcTag(nfcId){
+  const murid=DB.murids().find(m=>m.nfcId && m.nfcId.toLowerCase()===nfcId.toLowerCase());
+  if(murid){ return muridTap(murid); }
+  const guru=DB.gurus().find(g=>g.nfcId && g.nfcId.toLowerCase()===nfcId.toLowerCase());
+  if(guru){ return guruTap(guru); }
+  toast("❓ Kartu tidak dikenal: "+nfcId);
+  Voice.speak("Kartu tidak dikenali.");
+}
+// MURID tap -> masuk antrian (jika belum ada antrian aktif) + suara
+function muridTap(murid){
+  const logs=DB.logs();
+  const aktif=logs.find(l=>l.muridId===murid.id && (l.status==="Waiting"||l.status==="In Progress"));
+  if(aktif){
+    if(aktif.status==="In Progress"){ toast("ℹ️ "+murid.nama+" sedang diajar "+F.guruName(aktif.guruId)); Voice.panggilAssign(murid.nama, F.guruName(aktif.guruId)); }
+    else { toast("ℹ️ "+murid.nama+" sudah di antrian"); Voice.panggilAntri(murid.nama); }
+    NFCFeed.push({ t:Date.now(), type:"murid", text:murid.nama+" sudah di antrian" }); App.render(); return;
+  }
+  logs.push({ id:DB.uid("LOG"), muridId:murid.id, guruId:"", waktuMasuk:new Date().toISOString(),
+    status:"Waiting", waktuSelesai:"", durasi:"", level:"", pageAwal:null, pageAkhir:null, catatan:"", foto:"", rating:0, feedback:"" });
+  DB.saveLogs(logs);
+  toast("➕ "+murid.nama+" masuk antrian");
+  Voice.panggilAntri(murid.nama);
+  NFCFeed.push({ t:Date.now(), type:"murid", text:murid.nama+" masuk antrian" });
+  App.render();
+}
+// GURU tap -> auto-claim murid terlama (FIFO) + suara assign
+function guruTap(guru){
+  const logs=DB.logs();
+  // jika guru masih punya sesi berjalan, ingatkan selesaikan dulu
+  const sedang=logs.find(l=>l.status==="In Progress" && l.guruId===guru.id);
+  if(sedang){ const nm=F.muridName(sedang.muridId);
+    toast("⚠️ "+guru.nama+" masih mengajar "+nm); Voice.speak(guru.nama+", selesaikan dulu sesi dengan "+nm); 
+    NFCFeed.push({ t:Date.now(), type:"guru", text:guru.nama+" masih mengajar "+nm }); App.render(); return; }
+  const antri=logs.filter(l=>l.status==="Waiting").sort((a,b)=>new Date(a.waktuMasuk)-new Date(b.waktuMasuk));
+  if(antri.length===0){ toast("💤 Antrian kosong"); Voice.speak("Antrian kosong, "+guru.nama); 
+    NFCFeed.push({ t:Date.now(), type:"guru", text:guru.nama+" tap — antrian kosong" }); App.render(); return; }
+  const target=antri[0]; target.status="In Progress"; target.guruId=guru.id; DB.saveLogs(logs);
+  const nm=F.muridName(target.muridId);
+  toast("🎯 "+nm+" → "+guru.nama);
+  Voice.panggilAssign(nm, guru.nama);
+  NFCFeed.push({ t:Date.now(), type:"assign", text:nm+" dipanggil ke "+guru.nama });
+  App.render();
+}
+// Feed aktivitas NFC terbaru (untuk ditampilkan di layar stasiun)
+const NFCFeed = { items:[], push(x){ NFCFeed.items.unshift(x); if(NFCFeed.items.length>15) NFCFeed.items.pop(); } };
+
+/* -------------------- EXPORT EXCEL (CSV, dibuka Excel) -------------------- */
+const XLS = {
+  // Buat file .xls (HTML table) agar kolom rapi di Excel, tanpa library
+  download(filename, headers, rows){
+    let html="<html xmlns:x='urn:schemas-microsoft-com:office:excel'><head><meta charset='UTF-8'></head><body><table border='1'>";
+    html+="<tr>"+headers.map(hh=>"<th style='background:#7c3aed;color:#fff'>"+XLS.esc(hh)+"</th>").join("")+"</tr>";
+    rows.forEach(r=>{ html+="<tr>"+r.map(c=>"<td>"+XLS.esc(c==null?"":String(c))+"</td>").join("")+"</tr>"; });
+    html+="</table></body></html>";
+    const blob=new Blob(["\ufeff"+html], { type:"application/vnd.ms-excel" });
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=filename;
+    document.body.appendChild(a); a.click(); a.remove();
+  },
+  esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); },
+  exportMurid(){
+    const headers=["ID NFC","Nama","Level","Nama Wali","HP Wali","Tgl Lahir","Tipe SPP","Nominal SPP","Status SPP","Jatuh Tempo","Kuota Awal","Sisa Kuota"];
+    const rows=DB.murids().map(m=>[m.nfcId||"", m.nama, m.level, m.waliNama||"", m.waliHp||"", m.lahir||"", m.sppTipe, F.sppNominal(m.sppTipe), m.spp, m.tempo||"", m.kuotaAwal, F.sisaKuota(m.id)]);
+    XLS.download("data-murid-bimbel-ahe.xls", headers, rows);
+    toast("📥 Data murid diunduh");
+  },
+  exportSesi(){
+    const headers=["Tanggal","Murid","Guru","Status","Level Materi","Page Awal","Page Akhir","Total Hal","Durasi","Rating","Feedback","Catatan"];
+    const rows=DB.logs().map(l=>{ const t=F.totalPage(l.pageAwal,l.pageAkhir);
+      return [F.fmtDate(l.waktuMasuk), F.muridName(l.muridId), F.guruName(l.guruId)||"", l.status, l.level||"", l.pageAwal??"", l.pageAkhir??"", t??"", l.durasi||"", l.rating||"", l.feedback||"", l.catatan||""]; });
+    XLS.download("log-sesi-bimbel-ahe.xls", headers, rows);
+    toast("📥 Log sesi diunduh");
+  },
+  exportPayroll(y,m){
+    const cfg=DB.cfg();
+    const logs=DB.logs().filter(l=>l.status==="Done"&&l.guruId).filter(l=>{ const d=new Date(l.waktuMasuk); return d.getFullYear()===y&&d.getMonth()===m; });
+    const headers=["Guru","Jumlah Sesi","Persentase","Total Gaji (Rp)"];
+    const rows=DB.gurus().map(g=>{ const gl=logs.filter(l=>l.guruId===g.id);
+      return [g.nama, gl.length, cfg.persenGuru+"%", gl.reduce((a,l)=>a+F.gajiSesi(l.muridId),0)]; }).filter(r=>r[1]>0);
+    XLS.download("payroll-"+F.monthLabel(y,m).replace(" ","-")+".xls", headers, rows);
+    toast("📥 Payroll diunduh");
+  },
+};
+
 /* -------------------- SESSION -------------------- */
 const Session = {
   get(){ try{ return JSON.parse(localStorage.getItem(DB.k.session)); }catch(e){ return null; } },
@@ -386,20 +527,20 @@ function toast(m){ const t=h("div",{class:"toast"},m); document.body.appendChild
 
 /* -------------------- APP + ROUTER -------------------- */
 const App = {
-  tab:null, overlay:null,
+  tab:null, overlayEl:null,
   mount(){ DB.seed(); App.render(); },
   defaultTab(){ const r=Session.role(); if(r==="murid") return "me"; return "queue"; },
   go(tab){ App.tab=tab; App.closeOverlay(); App.render(); },
-  openOverlay(fn){ App.overlay=fn; App.render(); },
-  closeOverlay(){ App.overlay=null; App.render(); },
+  // Bangun overlay SEKALI lalu simpan elemennya (supaya state stepper/form tidak ter-reset saat render berikutnya)
+  openOverlay(fn){ App.overlayEl=fn(); App.render(); },
+  closeOverlay(){ App.overlayEl=null; document.querySelectorAll(".overlay").forEach(o=>o.remove()); App.render(); },
   render(){
     const root=$root(); root.innerHTML="";
-    // bersihkan overlay lama yang mungkin masih menempel di body
     document.querySelectorAll(".overlay").forEach(o=>o.remove());
     if(!Session.get()){ root.appendChild(LoginView()); return; }
     if(!App.tab) App.tab=App.defaultTab();
     root.appendChild(Shell());
-    if(App.overlay) document.body.appendChild(App.overlay());
+    if(App.overlayEl) document.body.appendChild(App.overlayEl);
     maybeInstallBanner();
   }
 };
@@ -441,12 +582,12 @@ function Shell(){
     h("div",{class:"me"}, h("button",{onClick:()=>{ if(confirm("Keluar dari aplikasi?")){ Session.clear(); App.tab=null; App.render(); } }}, "Keluar")));
 
   const tabsFor={
-    admin:[["queue","📋","Antrian"],["murid","🎓","Murid"],["notif","📣","Notif WA"],["payroll","💰","Payroll"],["setting","⚙️","Atur"]],
-    guru:[["queue","📋","Antrian"],["mystats","📊","Statistik Saya"]],
+    admin:[["station","📲","Stasiun NFC"],["queue","📋","Antrian"],["murid","🎓","Murid"],["notif","📣","Notif WA"],["more","⋯","Lainnya"]],
+    guru:[["station","📲","Scan NFC"],["queue","📋","Antrian"],["mystats","📊","Statistik Saya"]],
     murid:[["me","📈","Progres Saya"]],
   }[role];
   // halaman tambahan yang valid walau tak tampil di tab bar
-  const extraPages={ admin:["guru"], guru:[], murid:[] }[role]||[];
+  const extraPages={ admin:["guru","payroll","setting"], guru:[], murid:[] }[role]||[];
   if(!tabsFor.some(t=>t[0]===App.tab) && !extraPages.includes(App.tab)) App.tab=tabsFor[0][0];
 
   let body;
@@ -457,6 +598,8 @@ function Shell(){
     case "payroll": body=PayrollView(); break;
     case "setting": body=SettingView(); break;
     case "notif": body=NotifView(); break;
+    case "station": body=StationView(); break;
+    case "more": body=MoreView(); break;
     case "mystats": body=GuruStatsView(); break;
     case "me":    body=MuridSelfView(); break;
     default: body=QueueView();
@@ -678,11 +821,12 @@ function MuridDetailSheet(id){
 }
 function MuridFormSheet(id){
   const editing=!!id; const m=editing?F.murid(id):null; const cfg=DB.cfg();
-  const s={ nama:m?m.nama:"", hp:m?m.hp:"", email:m?m.email:"", level:m?m.level:CONFIG.levels[1],
+  const s={ nama:m?m.nama:"", nfcId:m?(m.nfcId||""):"", hp:m?m.hp:"", email:m?m.email:"", level:m?m.level:CONFIG.levels[1],
     waliNama:m?(m.waliNama||""):"", waliHp:m?(m.waliHp||""):"", lahir:m?(m.lahir||""):"", tempo:m?(m.tempo||""):"",
     spp:m?m.spp:"Lunas", sppTipe:m?m.sppTipe:cfg.sppTypes[0].nama, kuotaAwal:m?m.kuotaAwal:12 };
   const body=h("div",{class:"sheet-body"},
     textField("Nama Murid", s.nama, v=>s.nama=v, true),
+    textField("ID Kartu NFC Murid", s.nfcId, v=>s.nfcId=v, false),
     dateField("Tanggal Lahir (untuk ucapan ultah)", s.lahir, v=>s.lahir=v),
     textField("Nomor HP Murid", s.hp, v=>s.hp=v, false, "tel"),
     textField("Nama Wali Murid", s.waliNama, v=>s.waliNama=v, false),
@@ -696,7 +840,7 @@ function MuridFormSheet(id){
     selectField("Status SPP", ["Lunas","Belum Lunas","Jatuh Tempo"].map(x=>({v:x,t:x})), s.spp, v=>s.spp=v, false));
   const foot=h("div",{class:"sheet-foot"}, h("button",{class:"btn btn-primary",onClick:()=>{
     if(!s.nama.trim()){ toast("Nama murid wajib diisi"); return; } const ms=DB.murids();
-    const fields={nama:s.nama,hp:s.hp,email:s.email,level:s.level,spp:s.spp,sppTipe:s.sppTipe,kuotaAwal:Number(s.kuotaAwal)||0,waliNama:s.waliNama,waliHp:s.waliHp,lahir:s.lahir,tempo:s.tempo};
+    const fields={nama:s.nama,nfcId:s.nfcId,hp:s.hp,email:s.email,level:s.level,spp:s.spp,sppTipe:s.sppTipe,kuotaAwal:Number(s.kuotaAwal)||0,waliNama:s.waliNama,waliHp:s.waliHp,lahir:s.lahir,tempo:s.tempo};
     if(editing){ Object.assign(ms.find(x=>x.id===id),fields); }
     else ms.push({ id:DB.uid("MRD"), waktuMasuk:new Date().toISOString(), ...fields, level:s.level||CONFIG.levels[1] });
     DB.saveMurids(ms); toast(editing?"✅ Tersimpan":"🎓 Murid ditambahkan"); App.closeOverlay(); App.render(); }}, editing?"✅ Simpan":"🎓 Daftarkan Murid"));
@@ -716,14 +860,19 @@ function GuruListView(){
 }
 function GuruFormSheet(id){
   const editing=!!id; const g=editing?DB.gurus().find(x=>x.id===id):null;
-  const s={ nama:g?g.nama:"", email:g?g.email:"" };
-  const body=h("div",{class:"sheet-body"}, textField("Nama Guru", s.nama, v=>s.nama=v, true),
-    textField("Email (untuk login guru)", s.email, v=>s.email=v, false, "email"));
+  const s={ nama:g?g.nama:"", email:g?g.email:"", hp:g?(g.hp||""):"", nfcId:g?(g.nfcId||""):"" };
+  const body=h("div",{class:"sheet-body"},
+    textField("Nama Guru", s.nama, v=>s.nama=v, true),
+    textField("Email (untuk login guru)", s.email, v=>s.email=v, false, "email"),
+    textField("Nomor HP", s.hp, v=>s.hp=v, false, "tel"),
+    textField("ID Kartu NFC Guru", s.nfcId, v=>s.nfcId=v, false),
+    h("div",{class:"calc-box"}, h("div",{}, h("div",{class:"lbl"}, "ID NFC dipakai saat guru tap kartu untuk mengambil murid dari antrian secara otomatis."))));
   const foot=h("div",{class:"sheet-foot"},
     editing? h("button",{class:"btn btn-danger-line",style:"flex:0 0 auto;width:auto;padding:0 16px",onClick:()=>{
       if(confirm("Hapus guru ini?")){ DB.saveGurus(DB.gurus().filter(x=>x.id!==id)); toast("🗑️ Dihapus"); App.closeOverlay(); App.render(); } }}, "🗑️"):null,
     h("button",{class:"btn btn-primary",onClick:()=>{ if(!s.nama.trim()){ toast("Nama guru wajib diisi"); return; } const gs=DB.gurus();
-      if(editing){ Object.assign(gs.find(x=>x.id===id),{nama:s.nama,email:s.email}); } else gs.push({ id:DB.uid("GRU"), nama:s.nama, email:s.email });
+      const fields={nama:s.nama,email:s.email,hp:s.hp,nfcId:s.nfcId};
+      if(editing){ Object.assign(gs.find(x=>x.id===id),fields); } else gs.push({ id:DB.uid("GRU"), ...fields });
       DB.saveGurus(gs); toast(editing?"✅ Tersimpan":"👩‍🏫 Guru ditambahkan"); App.closeOverlay(); App.render(); }}, editing?"✅ Simpan":"👩‍🏫 Tambah Guru"));
   return Sheet(editing?"Edit Guru":"Guru Baru", body, foot);
 }
@@ -754,6 +903,7 @@ function PayrollView(){
         h("div",{class:"amt"}, h("div",{class:"big"}, F.rupiah(r.gaji)), h("div",{class:"sub"}, "gaji bulan ini"))),
       h("div",{class:"pbreak"}, cell(String(r.sesi),"Sesi"), cell(cfg.persenGuru+"%","Persentase"), cell(F.rupiah(r.sesi?Math.round(r.gaji/r.sesi):0),"Rata²/sesi")))); });
   return h("div",{class:"wrap"}, h("div",{class:"section-title"}, "💰 Rekap Payroll Guru"), monthNav, banner, cards,
+    h("button",{class:"btn btn-ok",style:"margin-bottom:10px",onClick:()=>XLS.exportPayroll(y,m)}, "📥  Download Payroll Bulan Ini (.xls)"),
     h("button",{class:"btn btn-ghost",onClick:()=>App.go("setting")}, "⚙️  Atur Persentase & Tipe SPP"));
 }
 function cell(v,l){ return h("div",{class:"cell"}, h("div",{class:"v"}, v), h("div",{class:"l"}, l)); }
@@ -927,6 +1077,112 @@ function broadcast(items){
   toast("📤 Membuka "+valid.length+" chat WA…");
 }
 
+/* -------------------- STASIUN NFC + SUARA -------------------- */
+let nfcStarted=false;
+function StationView(){
+  const role=Session.role();
+  const wrap=h("div",{class:"wrap"});
+  wrap.appendChild(h("div",{class:"section-title"}, "📲 Stasiun NFC & Panggilan Suara"));
+
+  // Status NFC
+  const supported=NFC.supported();
+  const statusCard=h("div",{class:"hero-card",style:"margin-bottom:16px"},
+    h("div",{style:"font-size:46px;text-align:center"}, supported? (nfcStarted?"📡":"📲") : "🚫"),
+    h("div",{style:"text-align:center;font-weight:800;font-size:17px;margin-top:6px"},
+      supported? (nfcStarted?"NFC Aktif — Tempelkan Kartu":"NFC Siap") : "NFC Tidak Didukung"),
+    h("div",{style:"text-align:center;font-size:12.5px;opacity:.9;margin-top:4px"},
+      supported? "Murid tap untuk antri · Guru tap untuk ambil murid" : "Pakai Chrome di HP Android untuk NFC. Gunakan Simulasi di bawah."));
+  wrap.appendChild(statusCard);
+
+  if(supported && !nfcStarted){
+    wrap.appendChild(h("button",{class:"btn btn-glow",style:"margin-bottom:14px",onClick:async()=>{
+      const r=await NFC.start(handleNfcTag);
+      if(r.ok){ nfcStarted=true; toast("📡 NFC aktif"); Voice.speak("Stasiun aktif"); App.render(); }
+      else alert(r.msg);
+    }}, "▶️  Aktifkan Pembaca NFC"));
+  }
+
+  // Simulasi tap (tes tanpa kartu) — admin & guru
+  const simCard=h("div",{class:"card",style:"padding:16px;margin-bottom:16px"});
+  simCard.appendChild(h("div",{style:"font-weight:800;font-size:13px;margin-bottom:10px;color:var(--brand-dark)"}, "🧪 Simulasi Tap (tes tanpa kartu)"));
+  simCard.appendChild(h("div",{style:"font-size:11.5px;color:var(--muted);margin-bottom:12px"}, "Tekan kartu untuk mensimulasikan tap NFC + suara."));
+  const chips=h("div",{style:"display:flex;flex-wrap:wrap;gap:8px"});
+  DB.murids().forEach(m=> chips.appendChild(h("button",{class:"nfc-chip murid",onClick:()=>handleNfcTag(m.nfcId)}, "🎒 "+m.nama)));
+  DB.gurus().forEach(g=> chips.appendChild(h("button",{class:"nfc-chip guru",onClick:()=>handleNfcTag(g.nfcId)}, "👩‍🏫 "+g.nama)));
+  simCard.appendChild(chips);
+  wrap.appendChild(simCard);
+
+  // Feed aktivitas
+  wrap.appendChild(h("div",{class:"section-title"}, "🗒️ Aktivitas Terbaru"));
+  const feed=h("div",{class:"card"});
+  if(NFCFeed.items.length===0) feed.appendChild(h("div",{class:"empty"}, h("span",{class:"em"},"👋"), "Belum ada aktivitas. Tap kartu untuk mulai."));
+  NFCFeed.items.forEach(it=>{ const em=it.type==="assign"?"🎯":it.type==="guru"?"👩‍🏫":"🎒";
+    feed.appendChild(h("div",{class:"row"},
+      h("div",{class:"avatar"+(it.type==="assign"?" acc":"")}, em),
+      h("div",{class:"info"}, h("div",{class:"name"}, it.text),
+        h("div",{class:"meta"}, new Date(it.t).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit",second:"2-digit"}))),
+      h("button",{class:"btn btn-line",style:"width:auto;min-height:40px;padding:0 12px;flex:0 0 auto",onClick:()=>Voice.speak(it.text)}, "🔊"))); });
+  wrap.appendChild(feed);
+  return wrap;
+}
+
+/* -------------------- MENU LAINNYA (admin) -------------------- */
+function MoreView(){
+  const wrap=h("div",{class:"wrap"});
+  wrap.appendChild(h("div",{class:"section-title"}, "⋯ Menu Lainnya"));
+  const menu=h("div",{class:"card",style:"margin-bottom:16px"});
+  [["💰","Payroll Guru","Rekap gaji bulanan (% × SPP)","payroll"],
+   ["👩‍🏫","Kelola Guru","Tambah / edit / hapus guru + ID NFC","guru"],
+   ["⚙️","Pengaturan","SPP, persentase gaji, template WA, nomor","setting"]].forEach(([em,t,d,go])=>{
+    menu.appendChild(h("div",{class:"row",onClick:()=>App.go(go)},
+      h("div",{class:"avatar"}, em),
+      h("div",{class:"info"}, h("div",{class:"name"}, t), h("div",{class:"meta"}, d)),
+      h("div",{class:"chev"}, "›"))); });
+  wrap.appendChild(menu);
+
+  wrap.appendChild(h("div",{class:"section-title"}, "📥 Export Data (Excel)"));
+  const exp=h("div",{class:"card",style:"padding:14px;display:flex;flex-direction:column;gap:10px"});
+  exp.appendChild(h("button",{class:"btn btn-ok",onClick:()=>XLS.exportMurid()}, "🎓  Download Data Murid (.xls)"));
+  exp.appendChild(h("button",{class:"btn btn-ok",onClick:()=>XLS.exportSesi()}, "📋  Download Log Sesi (.xls)"));
+  exp.appendChild(h("button",{class:"btn btn-ok",onClick:()=>XLS.exportPayroll(PayrollState.y,PayrollState.m)}, "💰  Download Payroll Bulan Terpilih (.xls)"));
+  wrap.appendChild(exp);
+
+  // Ringkasan rating guru (admin bisa lihat)
+  wrap.appendChild(h("div",{class:"section-title"}, "⭐ Rating Guru dari Wali Murid"));
+  const rat=h("div",{class:"card"});
+  const gurus=DB.gurus();
+  let any=false;
+  gurus.forEach(g=>{ const rated=DB.logs().filter(l=>l.guruId===g.id && l.rating>0);
+    if(rated.length===0) return; any=true;
+    const avg=(rated.reduce((a,l)=>a+l.rating,0)/rated.length);
+    rat.appendChild(h("div",{class:"row",onClick:()=>App.openOverlay(()=>GuruRatingSheet(g.id))},
+      h("div",{class:"avatar acc"}, F.initials(g.nama)),
+      h("div",{class:"info"}, h("div",{class:"name"}, g.nama),
+        h("div",{class:"meta"}, "★ "+avg.toFixed(1)+" dari "+rated.length+" penilaian")),
+      h("div",{class:"rating-view"}, "★".repeat(Math.round(avg)))));
+  });
+  if(!any) rat.appendChild(h("div",{class:"empty"}, h("span",{class:"em"},"⭐"), "Belum ada rating dari wali murid."));
+  wrap.appendChild(rat);
+  return wrap;
+}
+// Detail rating per guru (feedback dari wali)
+function GuruRatingSheet(guruId){
+  const g=DB.gurus().find(x=>x.id===guruId);
+  const rated=DB.logs().filter(l=>l.guruId===guruId && l.rating>0).sort((a,b)=>new Date(b.waktuMasuk)-new Date(a.waktuMasuk));
+  const avg=rated.length?(rated.reduce((a,l)=>a+l.rating,0)/rated.length):0;
+  const body=h("div",{},
+    h("div",{class:"detail-hero"}, h("div",{class:"av"}, F.initials(g.nama)), h("div",{class:"nm"}, g.nama),
+      h("div",{class:"st"}, "★ "+avg.toFixed(1)+" · "+rated.length+" penilaian")));
+  rated.forEach(l=>{ body.appendChild(h("div",{style:"padding:14px 18px;border-bottom:1px solid var(--line)"},
+    h("div",{style:"display:flex;justify-content:space-between;align-items:center"},
+      h("div",{style:"font-weight:700;font-size:13px"}, F.muridName(l.muridId)),
+      h("div",{class:"rating-view"}, "★".repeat(l.rating))),
+    l.feedback? h("div",{style:"font-size:13px;color:var(--muted);margin-top:5px"}, "“"+l.feedback+"”"):null,
+    h("div",{style:"font-size:11px;color:var(--muted);margin-top:4px"}, F.fmtDateShort(l.waktuMasuk)))); });
+  if(rated.length===0) body.appendChild(h("div",{class:"empty"}, "Belum ada penilaian."));
+  return Sheet("Rating "+g.nama, body, null);
+}
+
 /* -------------------- GURU STATS (tanpa gaji) -------------------- */
 function GuruStatsView(){
   const gr=Session.guruRecord();
@@ -938,21 +1194,28 @@ function GuruStatsView(){
   const minggu=mine.filter(l=>F.inWeek(l.waktuMasuk,now)).length;
   const hari=mine.filter(l=>F.sameDay(l.waktuMasuk,now)).length;
 
+  const rated=mine.filter(l=>l.rating>0);
+  const avg=rated.length?(rated.reduce((a,l)=>a+l.rating,0)/rated.length):0;
+
   const recent=[...mine].sort((a,b)=>new Date(b.waktuMasuk)-new Date(a.waktuMasuk)).slice(0,12);
   const history=h("div",{class:"card"});
   history.appendChild(h("div",{class:"group-head"}, h("span",{}, "🗂️ Sesi Terakhir Saya")));
   if(recent.length===0) history.appendChild(h("div",{class:"empty"}, "Belum ada sesi selesai."));
-  recent.forEach(l=>{ const total=F.totalPage(l.pageAwal,l.pageAkhir);
-    history.appendChild(h("div",{class:"row"},
+  recent.forEach(l=>{ const tp=F.totalPage(l.pageAwal,l.pageAkhir);
+    const block=h("div",{});
+    block.appendChild(h("div",{class:"row"},
       h("div",{class:"avatar acc"}, "✓"),
       h("div",{class:"info"}, h("div",{class:"name"}, F.muridName(l.muridId)),
-        h("div",{class:"meta"}, F.fmtDateShort(l.waktuMasuk)+(l.durasi?("  ·  "+l.durasi):"")+(total!=null?("  ·  "+total+" hal"):""))),
-      l.rating? h("div",{class:"rating-view"}, "★"+l.rating):""));
+        h("div",{class:"meta"}, F.fmtDateShort(l.waktuMasuk)+(l.durasi?("  ·  "+l.durasi):"")+(tp!=null?("  ·  "+tp+" hal"):""))),
+      l.rating? h("div",{class:"rating-view"}, "★".repeat(l.rating)):""));
+    if(l.feedback) block.appendChild(h("div",{class:"fb-box"}, h("div",{class:"r"}, "★".repeat(l.rating||0)), h("div",{class:"c"}, "“"+l.feedback+"”")));
+    history.appendChild(block);
   });
 
   return h("div",{class:"wrap"},
     h("div",{class:"section-title"}, "📊 Statistik Sesi Saya"),
-    h("div",{class:"total-banner acc"}, h("div",{class:"l"}, "Total Sesi Mengajar"), h("div",{class:"v"}, total+" sesi")),
+    h("div",{class:"total-banner acc"}, h("div",{class:"l"}, "Total Sesi Mengajar"), h("div",{class:"v"}, total+" sesi"),
+      rated.length? h("div",{class:"l",style:"margin-top:6px"}, "⭐ Rating rata-rata: "+avg.toFixed(1)+" dari "+rated.length+" penilaian wali"):null),
     h("div",{class:"stats"}, statCard(bulan,"Bulan Ini",true), statCard(minggu,"Minggu Ini"), statCard(hari,"Hari Ini",true)),
     history);
 }
