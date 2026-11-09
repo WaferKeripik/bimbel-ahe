@@ -1,5 +1,5 @@
 /* Bimbel Ahe — Service Worker (offline support for PWA) */
-const CACHE = "bimbel-ahe-v5";
+const CACHE = "bimbel-ahe-v6";
 const ASSETS = [
   "./",
   "./index.html",
